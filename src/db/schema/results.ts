@@ -1,0 +1,61 @@
+import {
+  index,
+  integer,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import { tests } from "./tests";
+import { attempts } from "./attempts";
+
+export const results = pgTable(
+  "results",
+  {
+    id: text("id").primaryKey(),
+    clerkUserId: text("clerk_user_id").notNull(),
+    testId: text("test_id")
+      .notNull()
+      .references(() => tests.id, { onDelete: "restrict" }),
+    attemptId: text("attempt_id")
+      .unique()
+      .notNull()
+      .references(() => attempts.id, { onDelete: "cascade" }),
+    totalMarks: integer("total_marks").notNull(),
+    scoredMarks: integer("scored_marks").notNull(),
+    correctAnswers: integer("correct_answers").notNull(),
+    wrongAnswers: integer("wrong_answers").notNull(),
+    skippedAnswers: integer("skipped_answers").notNull(),
+    percentage: integer("percentage").notNull(), // e.g. 75.5
+    timeTaken: integer("time_taken").notNull(), // in seconds
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("idx_results_test").on(table.testId)],
+);
+
+export const leaderboard = pgTable(
+  "leaderboard",
+  {
+    id: text("id").primaryKey(),
+    testId: text("test_id")
+      .notNull()
+      .references(() => tests.id, { onDelete: "cascade" }),
+    clerkUserId: text("clerk_user_id").notNull(),
+    resultId: text("result_id")
+      .notNull()
+      .references(() => results.id, { onDelete: "cascade" }),
+    rank: integer("rank").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_leaderboard_test").on(table.testId),
+    index("idx_leaderboard_user").on(table.clerkUserId),
+    uniqueIndex("unique_leaderboard_user").on(table.testId, table.clerkUserId),
+  ],
+);
+
+export type Result = typeof results.$inferSelect;
+export type NewResult = typeof results.$inferInsert;
+export type Leaderboard = typeof leaderboard.$inferSelect;
+export type NewLeaderboard = typeof leaderboard.$inferInsert;
