@@ -13,10 +13,11 @@ const links = [
   { label: "Browse Tests", href: "/mock-tests" },
 ];
 
+const authAppUrl = process.env.NEXT_PUBLIC_AUTH_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
 export default function PublicNavbar() {
   const { isAuthenticated, isLoaded } = useIsAuthenticated();
-  console.log("isLoaded:", isLoaded, "isAuthenticated:", isAuthenticated);
-
   const pathname = usePathname();
 
   return (
@@ -60,20 +61,21 @@ export default function PublicNavbar() {
         {/* Auth buttons */}
         <div className="flex items-center gap-3">
           {!isLoaded ? null : isAuthenticated ? (
-            <Button variant="secondary">
-              <SignOutButton />
-            </Button>
+            <SignOutButton>
+              <Button variant="secondary">Sign Out</Button>
+            </SignOutButton>
           ) : (
             <>
               <Link
-                href={`https://shippingupdates.in/sign-up?redirect_url=${encodeURIComponent("http://localhost:3000/")}`}
-              >
-                <Button variant="primary">Register</Button>
-              </Link>
-              <Link
-                href={`https://shippingupdates.in/sign-in?redirect_url=${encodeURIComponent("http://localhost:3000/")}`}
+                href={`${authAppUrl}/sign-in?redirect_url=${encodeURIComponent(appUrl + "/")}`}
               >
                 <Button variant="secondary">Login</Button>
+              </Link>
+
+              <Link
+                href={`${authAppUrl}/sign-up?redirect_url=${encodeURIComponent(appUrl + "/")}`}
+              >
+                <Button variant="primary">Register</Button>
               </Link>
             </>
           )}

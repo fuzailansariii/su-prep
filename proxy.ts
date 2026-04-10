@@ -19,12 +19,13 @@ const isAdminApiRoute = createRouteMatcher(["/api/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
-  const role = sessionClaims?.metadata?.role as string | undefined;
+  const role = sessionClaims?.role as string | undefined;
   const isAdmin = role === "admin";
 
-  const configuredSignIn =
-    process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || "https://shippingupdates.in/";
-  const signInUrl = new URL(configuredSignIn, req.url);
+  const signInUrl = new URL(
+    process.env.NEXT_PUBLIC_AUTH_APP_URL + "/sign-in" ||
+      "https://shippingupdates.in/sign-in",
+  );
   signInUrl.searchParams.set("redirect_url", req.url);
 
   // Protect admin routes

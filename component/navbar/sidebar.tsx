@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { Button } from "../ui/Button";
-import logo from "@/public/su-cropped.png";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutDashboard, Repeat } from "lucide-react";
+import { FileText, LayoutDashboard, Repeat, Settings, X } from "lucide-react";
+import logo from "@/public/su-cropped.png";
+import { Button } from "../ui/Button";
 
 type AdminMenuItem = {
   label: string;
@@ -29,57 +29,118 @@ const adminMenu: AdminMenuItem[] = [
     icon: <Repeat size={18} />,
     href: "/admin/attempts",
   },
+  {
+    label: "Settings",
+    icon: <Settings size={18} />,
+    href: "/admin/settings",
+  },
 ];
 
-export default function AdminSidebar() {
+type Props = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+export default function AdminSidebar({ isOpen, onClose }: Props) {
   const pathname = usePathname();
 
-  return (
-    <aside className="w-full md:max-w-64 h-screen bg-white border-r border-black/10 flex flex-col">
-      <div className="px-5 py-4 border-b border-black/10">
-        <Link href="/admin/dashboard" className="flex items-center gap-3">
-          <Image
-            src={logo}
-            alt="Logo"
-            width={38}
-            height={38}
-            className="rounded-md"
-            priority
-          />
-          <div className="flex flex-col leading-tight">
-            <span className="font-semibold text-base">Admin Panel</span>
-            <span className="text-xs opacity-70">Ship Test</span>
-          </div>
-        </Link>
-      </div>
+  const renderMenu = () => (
+    <nav className="flex flex-col gap-1 mt-6">
+      {adminMenu.map((item) => {
+        const isActive =
+          pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-      <nav className="flex-1 p-3 space-y-1.5">
-        {adminMenu.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-base font-heading transition
+              ${
                 isActive
-                  ? "bg-black text-white"
-                  : "text-black/75 hover:text-black hover:bg-black/5"
+                  ? "bg-[#E8EDFF] text-[#3B4EFF]"
+                  : "text-gray-500 hover:bg-gray-200 hover:text-gray-800"
               }`}
+          >
+            <span
+              className={`${isActive ? "text-[#3B4EFF]" : "text-gray-400"}`}
             >
-              <span>{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+              {item.icon}
+            </span>
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 
-      <div className="p-4 border-t border-black/10">
-        <Button variant="inverted" className="w-full justify-center">
-          Logout
-        </Button>
+  const renderHeader = () => (
+    <div className="flex items-center gap-3">
+      <Image
+        src={logo}
+        alt="Logo"
+        width={36}
+        height={36}
+        className="rounded-md"
+      />
+      <div className="leading-tight font-body">
+        <p className="text-sm font-bold text-[#1E2A5A]">SU PREP</p>
+        <p className="text-[10px] text-gray-400 tracking-wide font-semibold">
+          ADMIN
+        </p>
       </div>
-    </aside>
+    </div>
+  );
+
+  const renderFooter = () => (
+    <div className="mt-auto">
+      {/* User Card */}
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-white border mb-3">
+        <div className="w-8 h-8 rounded-full bg-gray-300" />
+        <div className="text-xs">
+          <p className="font-medium text-gray-800">Admin User</p>
+          <p className="text-gray-400">Chief Officer</p>
+        </div>
+      </div>
+
+      {/* CTA Button */}
+      <Button>+ Create New Exam</Button>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop */}
+      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-[#F5F7FB] shadow-xl px-4 py-6">
+        {renderHeader()}
+        {renderMenu()}
+        {renderFooter()}
+      </aside>
+
+      {/* Mobile */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-[#F5F7FB] shadow-xl px-4 py-6
+        transform transition-transform duration-300 md:hidden
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500"
+        >
+          <X size={20} />
+        </button>
+
+        {renderHeader()}
+        {renderMenu()}
+        {renderFooter()}
+      </aside>
+
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+    </>
   );
 }

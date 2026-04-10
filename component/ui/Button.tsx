@@ -19,7 +19,7 @@ export function Button({
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+      className={`inline-flex w-full justify-center items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
         transition-all active:scale-95 ${variants[variant]}`}
       {...props}
     >
