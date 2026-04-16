@@ -21,7 +21,7 @@ export default function UserNavbar() {
           href="/dashboard"
           className="font-heading font-bold text-xl text-primary"
         >
-          SHIPTEST
+          SU PREP
         </Link>
 
         {/* Nav links */}

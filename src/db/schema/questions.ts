@@ -28,6 +28,7 @@ export const questions = pgTable(
     explanation: text("explanation"), // shown after attempt
     marks: integer("marks").notNull().default(1),
     order: integer("order").notNull(), // question number in test
+    section: text("section"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
