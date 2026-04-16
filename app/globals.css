@@ -7,22 +7,22 @@
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.148 0.004 228.8);
-  --color-primary: #4f46e5;
-  --color-secondary: #1e293b;
+  --color-primary1: #4f46e5;
+  --color-secondary2: #1e293b;
   --color-tertiary: #bc4800;
   --color-neutral: #0f172a;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.148 0.004 228.8);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: oklch(0.508 0.118 165.612);
-  --primary-foreground: oklch(0.979 0.021 166.113);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #ffffff;
   --muted: oklch(0.963 0.002 197.1);
   --muted-foreground: oklch(0.56 0.021 213.5);
-  --accent: oklch(0.508 0.118 165.612);
-  --accent-foreground: oklch(0.979 0.021 166.113);
+  --accent: #bc4800;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.925 0.005 214.3);
   --input: oklch(0.925 0.005 214.3);
@@ -47,6 +47,11 @@
   /* color */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Custom brand colors */
+  --color-brand-primary: #3525cd;
+  --color-brand-primary-hover: #2b1fb0;
+  --color-brand-muted: #545f73;
 
   /* fonts */
   --font-heading: var(--font-heading);
