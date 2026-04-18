@@ -8,8 +8,6 @@ import Link from "next/link";
 import thumbnail from "@/public/watch-point.jpg";
 import { FeatureCard } from "@/components/feature-card";
 import {
-  BookOpen,
-  Target,
   Award,
   NotepadText,
   Timer,
@@ -19,7 +17,9 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import StepLayout from "@/components/step-layout";
-import FeaturedCard, { type MockTest } from "@/components/feature-tests-card";
+import FeaturedTestCard, {
+  type MockTest,
+} from "@/components/feature-tests-card";
 
 const mockApiTests: MockTest[] = [
   {
@@ -28,10 +28,7 @@ const mockApiTests: MockTest[] = [
     description:
       "Comprehensive 2-hour mock test covering all sections of the SAT exam. Track your progress with detailed section analytics.",
     imageUrl: "/watch-point.jpg",
-    tags: [
-      { label: "FULL LENGTH", variant: "primary" },
-      { label: "AI ANALYSIS", variant: "green" },
-    ],
+    tags: "FULL LENGTH",
     durationMins: 120,
     questionCount: 100,
     sections: "All Sections",
@@ -44,10 +41,7 @@ const mockApiTests: MockTest[] = [
     description:
       "Practice the exact pattern of leading shipping company entrance exams tailored specifically for Deck Cadets.",
     imageUrl: "/watch-point.jpg",
-    tags: [
-      { label: "DECK CADET", variant: "primary" },
-      { label: "LATEST PATTERN", variant: "green" },
-    ],
+    tags: "DECK CADET",
     durationMins: 90,
     questionCount: 75,
     sections: "Math, Physics, English",
@@ -121,6 +115,7 @@ export default function Home() {
             src={thumbnail}
             alt="Exam preparation illustration"
             className="w-full rounded-xl shadow-lg object-cover"
+            loading="eager"
           />
         </motion.div>
       </Container>
@@ -213,7 +208,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {mockApiTests.map((test) => (
-              <FeaturedCard key={test.id} test={test} />
+              <FeaturedTestCard key={test.id} test={test} />
             ))}
           </div>
         </Container>

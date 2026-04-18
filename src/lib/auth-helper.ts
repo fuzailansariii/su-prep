@@ -2,7 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 
 export async function getRole() {
   const { sessionClaims } = await auth();
-  return sessionClaims?.metadata?.role as string | undefined;
+  return sessionClaims?.role as string | undefined;
 }
 
 export async function isAdmin() {

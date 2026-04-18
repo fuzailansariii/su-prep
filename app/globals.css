@@ -52,6 +52,10 @@
   --color-brand-primary: #3525cd;
   --color-brand-primary-hover: #2b1fb0;
   --color-brand-muted: #545f73;
+  --color-brand-button: #e2e7ff;
+  --color-brand-label: #dae2fd;
+  --color-brand-price: #7e3000;
+  --color-brand-card: #f2f3ff;
 
   /* fonts */
   --font-heading: var(--font-heading);
