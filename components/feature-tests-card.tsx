@@ -1,5 +1,6 @@
 import { BarChart3, Clock, FileText } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "./ui/button";
 
 export interface MockTest {
@@ -7,7 +8,7 @@ export interface MockTest {
   title: string;
   description: string;
   imageUrl: string;
-  tags: { label: string; variant: "primary" | "green" }[];
+  tags: string;
   durationMins: number;
   questionCount: number;
   sections: string;
@@ -15,11 +16,11 @@ export interface MockTest {
   originalPrice?: number;
 }
 
-interface FeaturedCardProps {
+interface FeaturedTestCard {
   test: MockTest;
 }
 
-export default function FeaturedCard({ test }: FeaturedCardProps) {
+export default function FeaturedTestCard({ test }: FeaturedTestCard) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:flex-row group hover:shadow-md transition-all duration-300">
       {/* Image Section */}
@@ -33,58 +34,57 @@ export default function FeaturedCard({ test }: FeaturedCardProps) {
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 p-6 flex flex-col justify-between">
-        
+      <div className="flex-1 px-3 py-4 md:px-10 flex flex-col justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            {test.tags.map((tag, i) => (
-              <span
-                key={i}
-                className={`text-xs font-bold px-2 py-1 rounded border uppercase ${
-                  tag.variant === "primary"
-                    ? "text-brand-primary bg-brand-primary/5 border-brand-primary/10"
-                    : "text-green-600 bg-green-50 border-green-100"
-                }`}
-              >
-                {tag.label}
+            {/* Tag & Price */}
+            <div className="flex justify-between items-center w-full">
+              <span className="text-[10px] font-bold font-heading tracking-widest px-2 py-1 rounded-2xl border uppercase text-brand-muted bg-brand-label border-brand-primary/10">
+                {test.tags}
               </span>
-            ))}
+              <div className="flex items-baseline gap-2">
+                <span className="font-extrabold text-brand-price text-xl font-sans">
+                  ₹{test.price}
+                </span>
+                {test.originalPrice && (
+                  <span className="text-sm text-brand-muted font-semibold line-through font-sans">
+                    ₹{test.originalPrice}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          <h3 className="text-xl font-bold font-heading text-black mb-2">
+          <h3 className="text-xl font-bold font-sans text-black mb-2">
             {test.title}
           </h3>
-          <p className="text-sm text-brand-muted/80 mb-4 line-clamp-2">
+          <p className="text-sm font-body text-brand-muted/80 mb-3 line-clamp-2">
             {test.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-4 font-medium">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-3 font-medium font-body">
+            <div className="flex items-center gap-1">
               <Clock className="w-4 h-4 text-brand-primary/70" />
               <span>{test.durationMins} Mins</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <FileText className="w-4 h-4 text-brand-primary/70" />
               <span>{test.questionCount} Questions</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            {/* <div className="flex items-center gap-1">
               <BarChart3 className="w-4 h-4 text-brand-primary/70" />
               <span>{test.sections}</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-100">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-black">₹{test.price}</span>
-            {test.originalPrice && (
-              <span className="text-sm text-brand-muted line-through">
-                ₹{test.originalPrice}
-              </span>
-            )}
-          </div>
-          <Button className="w-full sm:w-auto bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl">
-            Start Test
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-4 w-full">
+          <Button
+            asChild
+            variant={"outline"}
+            className="w-full bg-brand-button h-10 font-heading text-sm text-brand-primary font-bold"
+          >
+            <Link href={`/mock-tests/${test.id}`}>View Details</Link>
           </Button>
         </div>
       </div>

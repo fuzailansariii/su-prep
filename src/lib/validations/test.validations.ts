@@ -20,7 +20,7 @@ const adminTestBaseSchema = z.object({
 
   description: z.string().max(LIMITS.description.max).nullable().optional(),
 
-  thumbnail: z.string().url("Must be a valid URL").nullable().optional(),
+  thumbnail: z.url("Must be a valid URL").nullable().optional(),
 
   duration: z
     .number({

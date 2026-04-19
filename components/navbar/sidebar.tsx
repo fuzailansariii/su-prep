@@ -22,9 +22,9 @@ const adminMenu: AdminMenuItem[] = [
     href: "/admin",
   },
   {
-    label: "EXAMS",
+    label: "TESTS",
     icon: <FileText size={18} />,
-    href: "/admin/exams",
+    href: "/admin/tests",
   },
   {
     label: "ATTEMPTS",
@@ -119,7 +119,9 @@ export default function AdminSidebar({ isOpen, onClose }: Props) {
       </div>
 
       {/* CTA Button */}
-      <Button className="w-full h-10 text-sm">+ Create New Exam</Button>
+      <Button className="w-full h-10 text-sm" asChild>
+        <Link href="/admin/tests/create">+ Create New Exam</Link>
+      </Button>
     </div>
   );
 

@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import Footer from "@/components/footer";
+import Providers from "@/components/providers";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 
-const interHeading = Inter({ subsets: ["latin"], variable: "--font-heading" });
+const interHeading = Inter({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  weight: ["400", "500", "600", "700"],
+});
 
 const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,21 +30,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn(
-        "h-full",
-        "antialiased",
-        inter.variable,
-        "font-sans",
-        manrope.variable,
-        interHeading.variable,
-      )}
-    >
-      <body className="min-h-full flex flex-col bg-[#FAF8FF]">
-        <ClerkProvider>{children}</ClerkProvider>
-        <Footer />
-      </body>
-    </html>
+    <Providers>
+      <html
+        lang="en"
+        className={cn(
+          "h-full",
+          "antialiased",
+          inter.variable,
+          "font-sans",
+          manrope.variable,
+          interHeading.variable,
+        )}
+      >
+        <body className="min-h-full flex flex-col bg-[#FAF8FF]">
+          {children}
+        </body>
+      </html>
+    </Providers>
   );
 }
+
