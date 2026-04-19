@@ -22,7 +22,7 @@ interface CSVRow {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const admin = await isAdmin();
   if (!admin) {
@@ -32,7 +32,8 @@ export async function POST(
     );
   }
 
-  const testId = params.id;
+  const { id } = await params;
+  const testId = id;
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
 
@@ -67,16 +68,19 @@ export async function POST(
     );
   }
 
-  await db.transaction(async (tx) => {
-    // Delete existing questions for this test (cascade deletes options too)
-    await tx.delete(questions).where(eq(questions.testId, testId));
+  // neon-http does not support transactions, so we run operations sequentially.
+  // First delete existing questions (cascade removes their options too),
+  // then insert the new ones. If insert fails, we re-delete to avoid partial data.
+  try {
+    // 1. Remove old questions for this test
+    await db.delete(questions).where(eq(questions.testId, testId));
 
+    // 2. Insert each question + its options
     for (const row of data) {
       const questionId = nanoid();
       const correctLetters = row.correct.toUpperCase().split("|");
 
-      // Insert question
-      await tx.insert(questions).values({
+      await db.insert(questions).values({
         id: questionId,
         testId,
         questionText: row.question,
@@ -87,16 +91,15 @@ export async function POST(
         section: row.section || null,
       });
 
-      // Build options (only non-empty)
       const optionLetters = ["A", "B", "C", "D"] as const;
       const optionTexts = [row.optionA, row.optionB, row.optionC, row.optionD];
 
       const optionRows = optionLetters
         .map((letter, i) => ({ letter, text: optionTexts[i], order: i + 1 }))
-        .filter((o) => o.text); // skip empty options (e.g. truefalse only has A, B)
+        .filter((o) => o.text);
 
       if (optionRows.length > 0) {
-        await tx.insert(options).values(
+        await db.insert(options).values(
           optionRows.map((o) => ({
             id: nanoid(),
             questionId,
@@ -107,7 +110,16 @@ export async function POST(
         );
       }
     }
-  });
+  } catch (err) {
+    // Attempt cleanup so we don't leave partial data
+    await db.delete(questions).where(eq(questions.testId, testId)).catch(() => {});
+    console.error("[questions/route] Insert failed:", err);
+    return NextResponse.json(
+      { error: "Failed to insert questions. Please try again." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ inserted: data.length });
 }
+

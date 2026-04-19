@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Footer from "@/components/footer";
 import Providers from "@/components/providers";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
@@ -45,9 +44,9 @@ export default function RootLayout({
       >
         <body className="min-h-full flex flex-col bg-[#FAF8FF]">
           {children}
-          <Footer />
         </body>
       </html>
     </Providers>
   );
 }
+
