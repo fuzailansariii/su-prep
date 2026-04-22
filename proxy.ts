@@ -23,8 +23,8 @@ export default clerkMiddleware(async (auth, req) => {
   const isAdmin = role === "admin";
 
   const signInUrl = new URL(
-    process.env.NEXT_PUBLIC_AUTH_APP_URL + "/sign-in" ||
-      "https://shippingupdates.in/sign-in",
+    (process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "https://shippingupdates.in") +
+      "/sign-in",
   );
   signInUrl.searchParams.set("redirect_url", req.url);
 

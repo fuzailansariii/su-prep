@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
@@ -21,6 +21,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Test } from "@/src/db/schema/tests";
+import { Input } from "@/components/ui/input";
+
+import { Image } from "@imagekit/next";
+import { formatPrice } from "@/utils/format-price";
 
 // ─────────────────────────────────────────────
 // Status badge
@@ -81,15 +85,25 @@ function DifficultyBadge({ difficulty }: { difficulty: Test["difficulty"] }) {
 // Single test card
 // ─────────────────────────────────────────────
 function TestCard({ test }: { test: Test }) {
-  const priceDisplay =
-    test.price === 0
-      ? "Free"
-      : `₹${(test.price / 100).toLocaleString("en-IN")}`;
+  const priceDisplay = test.price === 0 ? "Free" : formatPrice(test.price);
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md hover:border-slate-300 transition-all group">
       {/* Top row */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex gap-4 mb-3">
+        {test.thumbnail && (
+          <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
+            <Image
+              src={test.thumbnail}
+              alt=""
+              width={200}
+              height={200}
+              quality={70}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <StatusBadge status={test.status} />
@@ -103,18 +117,24 @@ function TestCard({ test }: { test: Test }) {
           <h3 className="text-base font-bold font-heading text-slate-900 truncate group-hover:text-brand-primary transition-colors">
             {test.title}
           </h3>
-          {test.description && (
-            <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-sans">
-              {test.description}
+          <div className="flex items-baseline gap-2">
+            <p className="text-lg font-black font-heading text-brand-primary">
+              {priceDisplay}
             </p>
-          )}
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-lg font-black font-heading text-brand-primary">
-            {priceDisplay}
-          </p>
+            {test.originalPrice && test.originalPrice > test.price && (
+              <p className="text-sm text-slate-400 line-through font-medium">
+                ₹{(test.originalPrice / 100).toLocaleString("en-IN")}
+              </p>
+            )}
+          </div>
         </div>
       </div>
+
+      {test.description && (
+        <p className="text-xs text-slate-400 mb-4 line-clamp-2 font-sans">
+          {test.description}
+        </p>
+      )}
 
       {/* Stats row */}
       <div className="flex items-center gap-4 text-xs text-slate-500 font-sans border-t border-slate-100 pt-3 flex-wrap">
@@ -132,7 +152,7 @@ function TestCard({ test }: { test: Test }) {
         </span>
         {test.negativeMarking && (
           <span className="text-[11px] bg-red-50 text-red-600 border border-red-100 rounded-md px-1.5 py-0.5 font-heading font-bold">
-            -{test.negativeMarkFraction! / 100} neg
+            {(test.negativeMarkFraction ?? 25) / 100} neg
           </span>
         )}
         <span className="ml-auto text-[11px] text-slate-300">
@@ -228,10 +248,12 @@ export default function AdminTestsPage() {
     try {
       const res = await axios.get("/api/admin/tests");
       setTests(res.data.data);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Failed to load tests. Try again.",
-      );
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(
+          err.response?.data?.message || "Failed to load tests. Try again.",
+        );
+      } else setError("Failed to load tests. Try again.");
     } finally {
       setLoading(false);
     }
@@ -279,7 +301,10 @@ export default function AdminTestsPage() {
           >
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
           </button>
-          <Button asChild className="h-9 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold font-heading">
+          <Button
+            asChild
+            className="h-9 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold font-heading"
+          >
             <Link href="/admin/tests/create">
               <Plus className="w-4 h-4 mr-1.5" />
               New Test
@@ -289,12 +314,12 @@ export default function AdminTestsPage() {
       </div>
 
       {/* Search */}
-      <input
+      <Input
         type="text"
         placeholder="Search tests..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-sm rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all font-sans"
+        className="w-full max-w-sm font-sans"
       />
 
       {/* Filter tabs */}
@@ -354,7 +379,10 @@ export default function AdminTestsPage() {
             </p>
           </div>
           {!search && (
-            <Button asChild className="rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold font-heading">
+            <Button
+              asChild
+              className="rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold font-heading"
+            >
               <Link href="/admin/tests/create">
                 <Plus className="w-4 h-4 mr-1.5" />
                 Create Test

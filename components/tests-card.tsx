@@ -2,35 +2,30 @@ import { BarChart3, Clock, FileText } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { formatPrice } from "@/utils/format-price";
+import { type Test } from "@/src/db/schema/tests";
 
-export interface MockTest {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  tags: string;
-  durationMins: number;
-  questionCount: number;
-  sections: string;
-  price: number;
-  originalPrice?: number;
+interface TestCardProps {
+  test: Test;
 }
 
-interface FeaturedTestCard {
-  test: MockTest;
-}
-
-export default function FeaturedTestCard({ test }: FeaturedTestCard) {
+export default function TestCard({ test }: TestCardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:flex-row group hover:shadow-md transition-all duration-300">
       {/* Image Section */}
       <div className="relative w-full md:w-64 h-48 md:h-auto shrink-0 bg-slate-100 overflow-hidden">
-        <Image
-          src={test.imageUrl}
-          alt="Mock Test"
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {test.thumbnail ? (
+          <Image
+            src={test.thumbnail}
+            alt={test.title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+            <FileText className="w-10 h-10" />
+          </div>
+        )}
       </div>
 
       {/* Content Section */}
@@ -40,15 +35,15 @@ export default function FeaturedTestCard({ test }: FeaturedTestCard) {
             {/* Tag & Price */}
             <div className="flex justify-between items-center w-full">
               <span className="text-[10px] font-bold font-heading tracking-widest px-2 py-1 rounded-2xl border uppercase text-brand-muted bg-brand-label border-brand-primary/10">
-                {test.tags}
+                {test.difficulty}
               </span>
               <div className="flex items-baseline gap-2">
                 <span className="font-extrabold text-brand-price text-xl font-sans">
-                  ₹{test.price}
+                  {formatPrice(test.price)}
                 </span>
                 {test.originalPrice && (
                   <span className="text-sm text-brand-muted font-semibold line-through font-sans">
-                    ₹{test.originalPrice}
+                    {formatPrice(test.originalPrice)}
                   </span>
                 )}
               </div>
@@ -65,16 +60,12 @@ export default function FeaturedTestCard({ test }: FeaturedTestCard) {
           <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-3 font-medium font-body">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.durationMins} Mins</span>
+              <span>{test.duration} Mins</span>
             </div>
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.questionCount} Questions</span>
+              <span>{test.totalQuestions} Questions</span>
             </div>
-            {/* <div className="flex items-center gap-1">
-              <BarChart3 className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.sections}</span>
-            </div> */}
           </div>
         </div>
 

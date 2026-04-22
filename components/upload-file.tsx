@@ -7,7 +7,13 @@ import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 
-export default function UploadFile() {
+export default function UploadFile({
+  onUploadComplete,
+  onClear,
+}: {
+  onUploadComplete?: (url: string) => void;
+  onClear?: () => void;
+}) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -45,7 +51,7 @@ export default function UploadFile() {
     setError(null);
     try {
       const { data: authRes } = await axios.get("/api/upload-auth");
-      
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("publicKey", authRes.publicKey);
@@ -63,21 +69,25 @@ export default function UploadFile() {
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total) {
               const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
+                (progressEvent.loaded * 100) / progressEvent.total,
               );
               setProgress(percentCompleted);
             }
           },
-        }
+        },
       );
       // Handle success here
+      if (onUploadComplete) onUploadComplete(uploadRes.data.url);
       console.log("Uploaded:", uploadRes.data);
     } catch (err: any) {
       console.error("Upload error:", err);
       if (err.response?.status === 401) {
         setError("Unauthorized: You do not have permission to upload files.");
       } else {
-        setError(err.response?.data?.message || "Failed to upload image. Please try again.");
+        setError(
+          err.response?.data?.message ||
+            "Failed to upload image. Please try again.",
+        );
       }
     } finally {
       setUploading(false);
@@ -114,6 +124,7 @@ export default function UploadFile() {
     setUploadedFile(null);
     setPreviewUrl(null);
     setError(null);
+    if (onClear) onClear();
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -148,7 +159,7 @@ export default function UploadFile() {
               src={previewUrl}
               alt="Preview"
               className={cn(
-                "w-full h-full object-contain transition-opacity",
+                "w-full h-full object-cover transition-opacity",
                 uploading && "opacity-50",
               )}
             />

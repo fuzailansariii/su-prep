@@ -1,23 +1,23 @@
 import Container from "@/components/container";
-import { MockTest } from "@/components/feature-tests-card";
-import Tests from "@/components/tests/all-tests";
-import React from "react";
+import AllTests from "@/components/tests/all-tests";
 
 export default function MockTests() {
   return (
-    <Container className="flex flex-col gap-10 md:gap-16 py-8">
-      <div className="flex flex-col gap-4">
-        <div className="text-left md:text-center mx-auto max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-black">
-            Mock Tests
+    <Container className="flex flex-col gap-5 md:gap-12 py-8">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 text-left md:text-center mx-auto max-w-2xl">
+          <h1 className="text-4xl md:text-5xl font-heading font-bold text-black tracking-tight">
+            Master the Waves with{" "}
+            <span className="text-brand-primary">Precision</span>
           </h1>
-          <p className="text-brand-muted/90 font-sans text-base md:text-lg leading-relaxed max-w-lg">
-            Choose a subject and start practicing today. High-precision maritime
-            exam simulations tailored for professional deck officers.
+          <p className="text-brand-muted/90 font-sans text-base md:text-lg leading-relaxed mx-auto">
+            Experience high-fidelity maritime entrance exam simulations. Our
+            tests are meticulously crafted to mirror actual company patterns,
+            providing you with the competitive edge needed to secure your rank.
           </p>
         </div>
       </div>
-      <Tests />
+      <AllTests />
     </Container>
   );
 }

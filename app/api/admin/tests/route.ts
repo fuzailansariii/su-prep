@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
 import { adminCreateTestSchema } from "@/src/lib/validations/test.validations";
 import z from "zod";
+import { toPaise } from "@/utils/format-price";
 
 export async function GET(req: NextRequest) {
   try {
@@ -58,14 +59,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = validationResult.data;
+    const validated = validationResult.data;
     const id = nanoid(12);
 
     const newTest = await db
       .insert(tests)
       .values({
         id,
-        ...data,
+        ...validated,
+        price: toPaise(validated.price),
+        originalPrice: validated.originalPrice
+          ? toPaise(validated.originalPrice)
+          : null,
       })
       .returning();
 
