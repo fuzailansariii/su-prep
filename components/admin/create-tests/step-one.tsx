@@ -5,9 +5,9 @@ import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { Field } from "./fields";
 import { useState } from "react";
 import { AdminCreateInput } from "@/src/lib/validations/test.validations";
-import { CreatedTest } from "../create-test-wizard";
 import axios, { AxiosError } from "axios";
 import UploadFile from "@/components/upload-file";
+import { CreatedTest } from "../create-test-wizard";
 
 export function TestDetailsStep({
   onCreated,

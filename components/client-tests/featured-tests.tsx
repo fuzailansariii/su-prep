@@ -1,7 +1,7 @@
 import { db } from "@/src/db";
 import { tests } from "@/src/db/schema";
 import { and, desc, eq, isNull } from "drizzle-orm";
-import TestCard from "../tests-card";
+import TestCard from "../user-tests-card";
 
 async function getFeaturedTests() {
   return await db.query.tests.findMany({

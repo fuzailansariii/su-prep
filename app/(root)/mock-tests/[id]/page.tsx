@@ -1,5 +1,5 @@
 import Container from "@/components/container";
-import TestDetails from "@/components/tests/test-details";
+import TestDetails from "@/components/client-tests/test-details";
 import { notFound } from "next/navigation";
 import { db } from "@/src/db";
 import { tests } from "@/src/db/schema";

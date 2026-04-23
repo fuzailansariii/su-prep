@@ -1,5 +1,5 @@
 import Container from "@/components/container";
-import AllTests from "@/components/tests/all-tests";
+import AllTests from "@/components/client-tests/all-tests";
 
 export default function MockTests() {
   return (

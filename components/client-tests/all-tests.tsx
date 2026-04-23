@@ -1,7 +1,7 @@
 import { db } from "@/src/db";
 import { tests } from "@/src/db/schema";
 import { eq, isNull, desc, and } from "drizzle-orm";
-import TestCard from "@/components/tests-card";
+import TestCard from "@/components/user-tests-card";
 import { Box } from "lucide-react";
 
 async function getAllTests() {

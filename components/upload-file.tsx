@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 
 export default function UploadFile({
+  initialUrl,
   onUploadComplete,
   onClear,
 }: {
+  initialUrl?: string;
   onUploadComplete?: (url: string) => void;
   onClear?: () => void;
 }) {
@@ -18,7 +20,7 @@ export default function UploadFile({
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl || null);
   const [progress, setProgress] = useState(0);
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);

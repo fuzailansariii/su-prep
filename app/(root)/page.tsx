@@ -1,5 +1,5 @@
 import Container from "@/components/container";
-import FeaturedTests from "@/components/tests/featured-tests";
+import FeaturedTests from "@/components/client-tests/featured-tests";
 import { HeroClient } from "@/components/home/hero-client";
 import WhyUs from "@/components/home/why-us";
 import HowItWorks from "@/components/home/how-it-works";
