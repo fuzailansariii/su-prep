@@ -3,11 +3,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutDashboard, Repeat, Settings, X } from "lucide-react";
+import {
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Repeat,
+  Settings,
+  X,
+} from "lucide-react";
 import logo from "@/public/su-cropped.png";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
+import { useClerk } from "@clerk/nextjs";
 
 type AdminMenuItem = {
   label: string;
@@ -44,6 +52,7 @@ type Props = {
 };
 
 export default function AdminSidebar({ isOpen, onClose }: Props) {
+  const { signOut } = useClerk();
   const pathname = usePathname();
 
   // Lock scroll when sidebar is open
@@ -108,19 +117,22 @@ export default function AdminSidebar({ isOpen, onClose }: Props) {
   );
 
   const renderFooter = () => (
-    <div className="mt-auto">
+    <div className="mt-auto flex flex-col gap-2">
       {/* User Card */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-white border mb-3">
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-white border">
         <div className="w-8 h-8 rounded-full bg-gray-300" />
-        <div className="text-xs">
-          <p className="font-medium text-gray-800">Admin User</p>
-          <p className="text-gray-400">Chief Officer</p>
+        <div className="text-sm font-sans">
+          <p className="font-bold text-gray-800">Admin</p>
         </div>
       </div>
 
-      {/* CTA Button */}
-      <Button className="w-full h-10 text-sm" asChild>
-        <Link href="/admin/tests/create">+ Create New Exam</Link>
+      {/* Logout Button */}
+      <Button
+        onClick={() => signOut({ redirectUrl: "/" })}
+        className="w-full h-10 text-sm flex items-center gap-2 font-heading font-bold"
+      >
+        <LogOut className="size-4" />
+        <span>Logout</span>
       </Button>
     </div>
   );

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import {
   AlertCircle,
   CheckCircle2,
@@ -76,12 +76,16 @@ export function AddQuestionsStep({
         },
       );
       setResult({ inserted: res.data.inserted });
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
-          err.response?.data?.details?.[0]?.message ||
-          "Failed to upload questions.",
-      );
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(
+          err.response?.data?.error ||
+            err.response?.data?.details?.[0]?.message ||
+            "Failed to upload questions.",
+        );
+      } else {
+        setError("Failed to upload questions.");
+      }
     } finally {
       setUploading(false);
     }

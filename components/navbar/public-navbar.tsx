@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@clerk/nextjs";
-import { Menu, X, ArrowRight } from "lucide-react";
-import { useIsAuthenticated } from "@/src/lib/auth-client";
+import { Menu, X, ArrowRight, LogOut, UserStar, User } from "lucide-react";
+import { useIsAuthenticated, useIsAdmin } from "@/src/lib/auth-client";
 import { Button } from "../ui/button";
 import Logo from "@/public/su-cropped.png";
 import { motion, AnimatePresence } from "motion/react";
@@ -27,6 +27,7 @@ const publicLinks = [
 export default function PublicNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, isLoaded } = useIsAuthenticated();
+  const isAdmin = useIsAdmin();
   const pathname = usePathname();
 
   // Scroll lock (safe cleanup)
@@ -78,14 +79,14 @@ export default function PublicNavbar() {
     const external = link.href.startsWith("http");
 
     return external ? (
-      <a
+      <Link
         key={link.href}
         href={link.href}
         className={className}
         onClick={onClick}
       >
         {link.label}
-      </a>
+      </Link>
     ) : (
       <Link
         key={link.href}
@@ -138,20 +139,40 @@ export default function PublicNavbar() {
             <div className="hidden md:flex items-center gap-3">
               {isLoaded &&
                 (isAuthenticated ? (
-                  <SignOutButton>
+                  <div className="flex items-center gap-3">
                     <Button
-                      variant="outline"
+                      asChild
+                      variant="default"
                       size="sm"
-                      className="rounded-xl font-bold border-slate-200 hover:bg-slate-50 text-slate-700"
+                      className="rounded-xl font-bold bg-brand-primary hover:bg-brand-primary-hover text-white hover:text-white h-10 px-6 font-heading flex items-center gap-2"
                     >
-                      Sign Out
+                      <Link
+                        href={isAdmin ? "/admin" : "/dashboard"}
+                        className="flex items-center"
+                      >
+                        {isAdmin ? (
+                          <UserStar className="size-4 mr-1" />
+                        ) : (
+                          <User className="size-4 mr-1" />
+                        )}
+                        {isAdmin ? "Admin Panel" : "Dashboard"}
+                      </Link>
                     </Button>
-                  </SignOutButton>
+                    <SignOutButton>
+                      <Button
+                        className="rounded-xl font-bold h-10 px-6 font-heading flex items-center gap-2"
+                        variant="destructive"
+                      >
+                        <LogOut className="size-4" />
+                        <span>Sign Out</span>
+                      </Button>
+                    </SignOutButton>
+                  </div>
                 ) : (
                   <Button
                     asChild
                     size="lg"
-                    className="bg-brand-primary hover:bg-brand-primary/90 font-heading text-sm text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
+                    className="bg-brand-primary hover:bg-brand-primary-hover font-heading text-sm text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
                   >
                     <Link href="/mock-tests">
                       Get Started{" "}
@@ -232,23 +253,46 @@ export default function PublicNavbar() {
                 </nav>
 
                 {/* Bottom Auth */}
-                <div className="mt-auto">
+                <div className="mt-auto flex flex-col gap-3">
                   {isAuthenticated ? (
-                    <SignOutButton>
+                    <>
                       <Button
-                        className="w-full rounded-2xl py-6 font-bold text-lg"
-                        variant="destructive"
+                        asChild
+                        variant="outline"
+                        className="w-full rounded-2xl py-6 font-bold text-lg font-heading bg-brand-primary text-white hover:bg-brand-primary-hover"
+                        onClick={() => setIsOpen(false)}
                       >
-                        Sign Out
+                        <Link href={isAdmin ? "/admin" : "/dashboard"}>
+                          {isAdmin ? (
+                            <>
+                              <UserStar className="mr-2 size-6" />
+                              Admin Panel
+                            </>
+                          ) : (
+                            <>
+                              <User className="mr-2 size-6" />
+                              Dashboard
+                            </>
+                          )}
+                        </Link>
                       </Button>
-                    </SignOutButton>
+                      <SignOutButton>
+                        <Button
+                          className="w-full rounded-2xl py-6 font-bold text-lg font-heading"
+                          variant="destructive"
+                        >
+                          <LogOut className="size-5 mr-1" />
+                          <span>Logout</span>
+                        </Button>
+                      </SignOutButton>
+                    </>
                   ) : (
                     <Button
                       className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white rounded-2xl py-6 font-bold font-sans text-lg shadow-md group"
                       asChild
                     >
                       <Link href="/mock-tests">
-                        Explore Tests{" "}
+                        Explore Tests
                         <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
                       </Link>
                     </Button>

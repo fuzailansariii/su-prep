@@ -5,8 +5,9 @@ import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { Field } from "./fields";
 import { useState } from "react";
 import { AdminCreateInput } from "@/src/lib/validations/test.validations";
+import axios, { AxiosError } from "axios";
+import UploadFile from "@/components/upload-file";
 import { CreatedTest } from "../create-test-wizard";
-import axios from "axios";
 
 export function TestDetailsStep({
   onCreated,
@@ -35,25 +36,29 @@ export function TestDetailsStep({
     try {
       const res = await axios.post("/api/admin/tests", form);
       onCreated({ id: res.data.data.id, title: res.data.data.title });
-    } catch (err: any) {
-      if (err.response?.status === 400) {
-        // Field-level errors from zod
-        const fieldErrors: Record<string, string> = {};
-        const errs = err.response.data?.error;
-        if (errs?.properties) {
-          Object.entries(errs.properties).forEach(([key, val]: any) => {
-            if (val?.errors?.[0]) fieldErrors[key] = val.errors[0];
-          });
-        }
-        setErrors(fieldErrors);
-        if (!Object.keys(fieldErrors).length) {
-          setApiError(err.response?.data?.message || "Validation failed");
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        if (err.response?.status === 400) {
+          // Field-level errors from zod
+          const fieldErrors: Record<string, string> = {};
+          const errs = err.response.data?.error;
+          if (errs?.properties) {
+            Object.entries(errs.properties).forEach(([key, val]: any) => {
+              if (val?.errors?.[0]) fieldErrors[key] = val.errors[0];
+            });
+          }
+          setErrors(fieldErrors);
+          if (!Object.keys(fieldErrors).length) {
+            setApiError(err.response?.data?.message || "Validation failed");
+          }
+        } else {
+          setApiError(
+            err.response?.data?.error ||
+              "Failed to create test. Please try again.",
+          );
         }
       } else {
-        setApiError(
-          err.response?.data?.error ||
-            "Failed to create test. Please try again.",
-        );
+        setApiError("Failed to create test. Please try again.");
       }
     } finally {
       setSubmitting(false);
@@ -68,6 +73,15 @@ export function TestDetailsStep({
           {apiError}
         </div>
       )}
+
+      {/* Thumbnail */}
+
+      <Field label="Thumbnail (Optional)" error={errors.thumbnail}>
+        <UploadFile
+          onUploadComplete={(url) => set("thumbnail", url)}
+          onClear={() => set("thumbnail", null)}
+        />
+      </Field>
 
       {/* Title */}
       <Field label="Test Title *" error={errors.title}>
@@ -116,19 +130,27 @@ export function TestDetailsStep({
         </Field>
       </div>
 
-      {/* Total Marks + Price */}
+      {/* Pricing */}
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Total Marks *" error={errors.totalMarks}>
+        <Field
+          label="Original Price (₹)"
+          error={errors.originalPrice}
+          hint="Strikethrough price"
+        >
           <Input
             type="number"
-            placeholder="e.g. 100"
-            min={1}
-            value={form.totalMarks ?? ""}
-            onChange={(e) => set("totalMarks", Number(e.target.value))}
-            className={errors.totalMarks ? "border-red-400" : ""}
+            placeholder="e.g. 999"
+            min={0}
+            value={form.originalPrice ?? ""}
+            onChange={(e) => set("originalPrice", Number(e.target.value))}
+            className={errors.originalPrice ? "border-red-400" : ""}
           />
         </Field>
-        <Field label="Price (₹) *" error={errors.price} hint="Enter 0 for free">
+        <Field
+          label="Offer Price (₹) *"
+          error={errors.price}
+          hint="Enter 0 for free"
+        >
           <Input
             type="number"
             placeholder="e.g. 499"
@@ -139,6 +161,17 @@ export function TestDetailsStep({
           />
         </Field>
       </div>
+
+      <Field label="Total Marks *" error={errors.totalMarks}>
+        <Input
+          type="number"
+          placeholder="e.g. 100"
+          min={1}
+          value={form.totalMarks ?? ""}
+          onChange={(e) => set("totalMarks", Number(e.target.value))}
+          className={errors.totalMarks ? "border-red-400" : ""}
+        />
+      </Field>
 
       {/* Difficulty */}
       <Field label="Difficulty" error={errors.difficulty}>

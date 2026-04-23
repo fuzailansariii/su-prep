@@ -1,8 +1,9 @@
 import Container from "@/components/container";
-import React from "react";
-import { mockFeaturedTests } from "@/components/tests/mock-tests-data";
-import TestDetails from "@/components/tests/test-details";
+import TestDetails from "@/components/client-tests/test-details";
 import { notFound } from "next/navigation";
+import { db } from "@/src/db";
+import { tests } from "@/src/db/schema";
+import { and, eq, isNull } from "drizzle-orm";
 
 interface TestDetailsPageProps {
   params: Promise<{
@@ -14,16 +15,24 @@ export default async function TestDetailsPage({
   params,
 }: TestDetailsPageProps) {
   const { id } = await params;
-  const normalizedId = decodeURIComponent(id).trim();
-  const test = mockFeaturedTests.find((item) => item.id === normalizedId);
 
+  // Fetch the test from the database
+  const test = await db.query.tests.findFirst({
+    where: and(
+      eq(tests.id, id),
+      eq(tests.status, "draft"),
+      isNull(tests.deletedAt),
+    ),
+  });
+
+  // If no test is found, show 404
   if (!test) {
     notFound();
   }
 
   return (
     <Container>
-      <TestDetails test={test} key={test.id} />
+      <TestDetails test={test} />
     </Container>
   );
 }

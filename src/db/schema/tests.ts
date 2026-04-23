@@ -29,6 +29,7 @@ export const tests = pgTable(
     negativeMarking: boolean("negative_marking").default(false).notNull(),
     negativeMarkFraction: integer("negative_mark_fraction").default(25), // e.g. 1 for -0.25 (marks -= negativeMarkFraction / 100; - "// means 0.25")
     price: integer("price").notNull(), // in paise (e.g. 49900 = ₹499)
+    originalPrice: integer("original_price"), // in paise, optional
     difficulty: difficultyEnum("difficulty").default("medium").notNull(),
     status: testStatusEnum("status").default("draft").notNull(),
     isFeatured: boolean("is_featured").default(false).notNull(),

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const data = await db
+    const rawData = await db
       .select({
         id: tests.id,
         title: tests.title,
@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
         totalQuestions: tests.totalQuestions,
         totalMarks: tests.totalMarks,
         price: tests.price,
+        originalPrice: tests.originalPrice,
         difficulty: tests.difficulty,
         isFeatured: tests.isFeatured,
         negativeMarking: tests.negativeMarking,
@@ -25,7 +26,8 @@ export async function GET(req: NextRequest) {
       })
       .from(tests)
       .where(and(eq(tests.status, "published"), isNull(tests.deletedAt)));
-    return NextResponse.json({ success: true, data: data }, { status: 200 });
+
+    return NextResponse.json({ success: true, data: rawData }, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch tests:", error);
     return NextResponse.json(

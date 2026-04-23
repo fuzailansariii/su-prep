@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Step, StepIndicator } from "./create-tests/step-indicator";
 import { TestDetailsStep } from "./create-tests/step-one";
 import { AddQuestionsStep } from "./create-tests/step-two";
+
 
 export interface CreatedTest {
   id: string;
@@ -26,11 +27,16 @@ export default function CreateTestWizard() {
 
   const handleComplete = () => {
     setStep("done");
-    setTimeout(() => router.push("/admin/tests"), 1500);
   };
 
+  useEffect(() => {
+    if (step !== "done") return;
+    const t = setTimeout(() => router.push("/admin/tests"), 1500);
+    return () => clearTimeout(t);
+  }, [step]);
+
   return (
-    <div className="min-h-screen bg-slate-50/50 flex items-start justify-center py-10 px-4">
+    <div className="min-h-screen bg-slate-50/50 flex items-start justify-center py-10 px-2 sm:px-4">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="mb-8">

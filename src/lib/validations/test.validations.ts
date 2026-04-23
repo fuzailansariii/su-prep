@@ -53,12 +53,20 @@ const adminTestBaseSchema = z.object({
     .number({
       error: (issue) =>
         issue.input === undefined
-          ? "Pricee is requird"
+          ? "Price is required"
           : "Price must be a number",
     })
     .int("Price must be in paise — no decimals")
     .min(0, "Price cannot be negative")
     .max(LIMITS.price.max, "Price is too high"),
+
+  originalPrice: z
+    .number({ error: "Must be a number" })
+    .int()
+    .min(0)
+    .max(LIMITS.price.max)
+    .nullable()
+    .optional(),
 
   difficulty: Difficulty.default("medium"),
 
@@ -85,6 +93,9 @@ export type AdminCreateInput = z.infer<typeof adminCreateTestSchema>;
 
 // Update — all fields optional, at least one required
 export const adminUpdateTestSchema = adminTestBaseSchema
+  .extend({
+    status: TestStatus,
+  })
   .partial()
   .refine(
     (data) => Object.keys(data).length > 0,
