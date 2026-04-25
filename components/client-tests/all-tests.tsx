@@ -8,7 +8,7 @@ async function getAllTests() {
   return await db
     .select()
     .from(tests)
-    .where(and(eq(tests.status, "draft"), isNull(tests.deletedAt)))
+    .where(and(eq(tests.status, "published"), isNull(tests.deletedAt)))
     .orderBy(desc(tests.createdAt));
 }
 
@@ -17,7 +17,7 @@ export default async function AllTests() {
 
   if (allTests.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 h-full px-6 max-w-md mx-auto border-2 border-dashed border-slate-200 rounded-3xl text-center">
+      <div className="flex flex-col items-center justify-center py-10 h-full px-6 max-w-md mx-auto border-2 border-dashed border-slate-200 rounded-3xl text-center">
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
           <Box size={40} />
         </div>
