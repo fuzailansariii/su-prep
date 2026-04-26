@@ -2,6 +2,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import React from "react";
 import { ImageKitProvider } from "@imagekit/next";
+import { Toaster } from "./ui/sonner";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // const authState = aut
@@ -14,6 +15,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       signInUrl={`${process.env.NEXT_PUBLIC_AUTH_APP_URL}/sign-in`}
       signUpUrl={`${process.env.NEXT_PUBLIC_AUTH_APP_URL}/sign-up`}
     >
+      <Toaster position="bottom-right" />
       {children}
     </ClerkProvider>
   );

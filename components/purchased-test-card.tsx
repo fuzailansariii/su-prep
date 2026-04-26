@@ -69,7 +69,7 @@ export default function PurchasedTestCard({ test }: PurchasedTestCardProps) {
             className="flex-1 h-11 font-heading text-sm font-bold rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white shadow-sm"
           >
             <Link
-              href={`/attempt/${test.id}`}
+              href={`/test/${test.id}`}
               className="flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 fill-current" />

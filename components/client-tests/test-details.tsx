@@ -117,7 +117,7 @@ export default function TestDetails({ test, hasPurchased }: TestDetailProps) {
             {hasPurchased ? (
               <Link
                 className="w-full py-4 rounded-xl bg-brand-button hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
-                href={`/attempt/${test.id}`}
+                href={`/test/${test.id}`}
               >
                 Start Mock Test
               </Link>
