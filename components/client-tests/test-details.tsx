@@ -7,6 +7,9 @@ import { formatPrice } from "@/utils/format-price";
 interface TestDetailProps {
   test: Test;
   hasPurchased?: boolean;
+  attemptStatus?: "not_started" | "in_progress" | "completed";
+  attemptId?: string;
+  resultId?: string;
 }
 
 const whatsIncluded = [
@@ -15,7 +18,13 @@ const whatsIncluded = [
   "Instant Performance Results",
 ];
 
-export default function TestDetails({ test, hasPurchased }: TestDetailProps) {
+export default function TestDetails({
+  test,
+  hasPurchased,
+  attemptStatus = "not_started",
+  attemptId,
+  resultId,
+}: TestDetailProps) {
   const discountPercent = test.originalPrice
     ? Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100)
     : null;
@@ -113,14 +122,30 @@ export default function TestDetails({ test, hasPurchased }: TestDetailProps) {
               </div>
             </div>
 
-            {/* Buy or Start button */}
+            {/* Buy or Action button */}
             {hasPurchased ? (
-              <Link
-                className="w-full py-4 rounded-xl bg-brand-button hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
-                href={`/test/${test.id}`}
-              >
-                Start Mock Test
-              </Link>
+              attemptStatus === "completed" ? (
+                <Link
+                  className="w-full py-4 rounded-xl bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+                  href={`/test/${test.id}/result/${resultId}`}
+                >
+                  View Result
+                </Link>
+              ) : attemptStatus === "in_progress" ? (
+                <Link
+                  className="w-full py-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+                  href={`/test/${test.id}/attempt?attemptId=${attemptId}`}
+                >
+                  Resume Test
+                </Link>
+              ) : (
+                <Link
+                  className="w-full py-4 rounded-xl bg-brand-button hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+                  href={`/test/${test.id}`}
+                >
+                  Start Mock Test
+                </Link>
+              )
             ) : (
               <Link
                 href={`/checkout/${test.id}`}

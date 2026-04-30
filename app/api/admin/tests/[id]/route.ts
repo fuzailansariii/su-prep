@@ -108,3 +108,45 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const admin = await isAdmin();
+  if (!admin) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
+  try {
+    const { id } = await params;
+    
+    // Soft delete the test
+    const deletedTest = await db
+      .update(tests)
+      .set({ deletedAt: new Date() })
+      .where(eq(tests.id, id))
+      .returning();
+
+    if (deletedTest.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Test not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Test deleted successfully",
+    });
+  } catch (error) {
+    console.error("Failed to delete test:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete test" },
+      { status: 500 },
+    );
+  }
+}

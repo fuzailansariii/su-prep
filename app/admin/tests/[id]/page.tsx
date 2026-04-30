@@ -139,6 +139,7 @@ export default function AdminTestViewPage({
           <div className="sm:w-52 h-40 sm:h-auto bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-100 flex items-center justify-center shrink-0">
             {test.thumbnail ? (
               <Image
+                urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
                 src={test.thumbnail}
                 alt={test.title}
                 width={400}

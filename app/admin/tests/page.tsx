@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import type { Test } from "@/src/db/schema/tests";
 import { Input } from "@/components/ui/input";
 import { AdminTestCard } from "@/components/admin-test-card";
+import useConfirm from "@/hooks/use-confirm";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // ─────────────────────────────────────────────
 // Filter tab
@@ -58,6 +60,24 @@ export default function AdminTestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { isOpen, confirm, handleConfirm, handleCancel, close } = useConfirm();
+
+  const handleDelete = async (id: string) => {
+    const yes = await confirm();
+    if (!yes) return;
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/api/admin/tests/${id}`);
+      setTests((prev) => prev.filter((t) => t.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete test.");
+    } finally {
+      setIsDeleting(false);
+      close();
+    }
+  };
 
   const fetchTests = async () => {
     setLoading(true);
@@ -212,10 +232,22 @@ export default function AdminTestsPage() {
       {!loading && !error && visible.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {visible.map((test) => (
-            <AdminTestCard key={test.id} test={test} />
+            <AdminTestCard key={test.id} test={test} onDelete={handleDelete} />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={isOpen}
+        title="Delete Test"
+        message="Are you sure you want to delete this test? This action cannot be undone."
+        confirmLabel="Delete Test"
+        cancelLabel="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

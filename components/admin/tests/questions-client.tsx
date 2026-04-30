@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
 import {
   Plus,
   Pencil,
@@ -10,9 +11,12 @@ import {
   FileText,
   Hash,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { type Question, type Option } from "@/src/db/schema/questions";
 import Container from "@/components/container";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import useConfirm from "@/hooks/use-confirm";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface QuestionWithRelations extends Question {
   options: Option[];
@@ -141,14 +145,27 @@ export default function QuestionsClient({
   testId,
 }: QuestionsClientProps) {
   const [questions, setQuestions] = useState(initialQuestions);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { isOpen, confirm, handleConfirm, handleCancel, close } = useConfirm();
 
   const handleEdit = (id: string) => {
     // wire to edit modal/drawer
   };
 
-  const handleDelete = (id: string) => {
-    // wire to delete API
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
+  const handleDelete = async (id: string) => {
+    const yes = await confirm();
+    if (!yes) return;
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/api/admin/tests/${testId}/questions/${id}`);
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete question. Please try again.");
+    } finally {
+      setIsDeleting(false);
+      close();
+    }
   };
 
   const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
@@ -166,9 +183,14 @@ export default function QuestionsClient({
           </p>
         </div>
         {questions.length !== 0 && (
-          <Button className="h-12 sm:h-11 px-6 rounded-2xl bg-brand-primary hover:bg-brand-primary/90 text-white font-heading font-bold text-sm gap-2 shadow-lg shadow-brand-primary/20">
-            <Plus size={18} />
-            Add Question
+          <Button
+            asChild
+            className="h-12 sm:h-11 px-6 rounded-2xl bg-brand-primary hover:bg-brand-primary/90 text-white font-heading font-bold text-sm gap-2 shadow-lg shadow-brand-primary/20"
+          >
+            <Link href={`/admin/tests/${testId}/questions/add`}>
+              <Plus size={18} />
+              Add Question
+            </Link>
           </Button>
         )}
       </div>
@@ -214,9 +236,14 @@ export default function QuestionsClient({
             Your question bank is empty. Get started by manually adding your
             first question or uploading a batch.
           </p>
-          <Button className="h-11 rounded-2xl bg-brand-primary hover:bg-brand-primary/90 text-white font-heading font-bold text-sm gap-2">
-            <Plus size={18} />
-            Create First Question
+          <Button
+            asChild
+            className="h-11 rounded-2xl bg-brand-primary hover:bg-brand-primary/90 text-white font-heading font-bold text-sm gap-2 mt-4"
+          >
+            <Link href={`/admin/tests/${testId}/questions/add`}>
+              <Plus size={18} />
+              Create First Question
+            </Link>
           </Button>
         </div>
       ) : (
@@ -231,6 +258,18 @@ export default function QuestionsClient({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={isOpen}
+        title="Delete Question"
+        message="Are you sure you want to delete this question? This action cannot be undone."
+        confirmLabel="Delete Question"
+        cancelLabel="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </Container>
   );
 }

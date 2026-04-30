@@ -1,5 +1,6 @@
 "use client";
 import { ReactNode, useState } from "react";
+import { usePathname } from "next/navigation";
 import AdminSidebar from "@/components/navbar/sidebar";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import Logo from "@/public/su-cropped.png";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div className="flex h-screen">
@@ -41,8 +43,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </Button>
         </header>
 
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        {/* key={pathname} forces React to remount the page on every navigation
+            so useEffect always runs fresh — no stale loading states */}
+        <main key={pathname} className="flex-1 p-6 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
 }
+

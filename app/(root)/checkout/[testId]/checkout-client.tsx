@@ -129,7 +129,7 @@ export default function CheckoutClient({ test }: CheckoutClientProps) {
             <div className="relative w-24 h-24 bg-slate-100 rounded-xl overflow-hidden shrink-0">
               {test.thumbnail ? (
                 <Image
-                  urlEndpoint={test.thumbnail}
+                  urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
                   src={test.thumbnail}
                   alt={test.title}
                   width={80}

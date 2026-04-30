@@ -1,5 +1,4 @@
-import React from "react";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/src/db";
 import { attempts, purchases, results } from "@/src/db/schema";
@@ -18,20 +17,34 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import PurchasedTestCard from "@/components/purchased-test-card";
 import { Image } from "@imagekit/next";
+import type { Test } from "@/src/db/schema/tests";
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   if (!userId) {
     redirect("/sign-in");
   }
 
-  const user = await currentUser();
-  const firstName = user?.firstName || "Student";
+  const firstName = (sessionClaims?.firstName as string) ?? "Student";
+
+  const userAttempts = await db.query.attempts.findMany({
+    where: eq(attempts.clerkUserId, userId),
+    with: { test: true },
+    orderBy: [desc(attempts.startedAt)],
+  });
+
+  // recent attempts
+  const recentAttempts = userAttempts.slice(0, 3);
+
+  // map testId → attempt
+  const attemptMap = new Map(userAttempts.map((a) => [a.testId, a]));
 
   // Fetch results to calculate total attempts and average score
   const userResults = await db.query.results.findMany({
     where: eq(results.clerkUserId, userId),
   });
+
+  const resultMap = new Map(userResults.map((r) => [r.attemptId, r]));
 
   const totalCompleted = userResults.length;
   const averageScore =
@@ -41,16 +54,6 @@ export default async function DashboardPage() {
             totalCompleted,
         )
       : 0;
-
-  // Fetch user's recent attempts (in progress or completed)
-  const recentAttempts = await db.query.attempts.findMany({
-    where: eq(attempts.clerkUserId, userId),
-    with: {
-      test: true,
-    },
-    orderBy: [desc(attempts.startedAt)],
-    limit: 3,
-  });
 
   // Fetch user's purchases with the associated test
   const userPurchases = await db.query.purchases.findMany({
@@ -64,7 +67,13 @@ export default async function DashboardPage() {
     orderBy: [desc(purchases.createdAt)],
   });
 
-  const purchasedTests = userPurchases.map((p) => p.test).filter(Boolean);
+  // These links go to pages that require tests to be published.
+  // Filter here to avoid dashboard showing items that later 404.
+  const purchasedTests = userPurchases
+    .map((p) => p.test)
+    .filter(
+      (t): t is Test => !!t && t.status === "published" && t.deletedAt === null,
+    );
 
   return (
     <div className="bg-[#FAF8FF] min-h-screen pb-20">
@@ -119,6 +128,9 @@ export default async function DashboardPage() {
                     <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden relative">
                       {attempt.test?.thumbnail ? (
                         <Image
+                          urlEndpoint={
+                            process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+                          }
                           src={attempt.test.thumbnail}
                           alt={attempt.test.title}
                           width={48}
@@ -166,7 +178,11 @@ export default async function DashboardPage() {
                         size="sm"
                         className="font-bold text-xs h-8"
                       >
-                        <Link href={`/attempt/${attempt.testId}`}>Resume</Link>
+                        <Link
+                          href={`/test/${attempt.testId}/attempt?attemptId=${attempt.id}`}
+                        >
+                          Resume
+                        </Link>
                       </Button>
                     )}
                   </div>
@@ -196,9 +212,27 @@ export default async function DashboardPage() {
 
           {purchasedTests.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {purchasedTests.map((test) => (
-                <PurchasedTestCard key={test.id} test={test} />
-              ))}
+              {purchasedTests.map((test) => {
+                const attempt = attemptMap.get(test.id);
+                const result = attempt ? resultMap.get(attempt.id) : undefined;
+
+                return (
+                  <PurchasedTestCard
+                    key={test.id}
+                    test={test}
+                    attemptStatus={
+                      !attempt
+                        ? "not_started"
+                        : attempt.status === "completed"
+                          ? "completed"
+                          : "in_progress"
+                    }
+                    attemptId={attempt?.id}
+                    resultId={result?.id}
+                    score={result?.percentage}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center text-center">
