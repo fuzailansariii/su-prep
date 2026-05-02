@@ -56,6 +56,7 @@
   --color-brand-label: #dae2fd;
   --color-brand-price: #7e3000;
   --color-brand-card: #f2f3ff;
+  --color-brand-label: #f2f3ff;
 
   /* fonts */
   --font-heading: var(--font-heading);

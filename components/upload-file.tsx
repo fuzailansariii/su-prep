@@ -20,7 +20,9 @@ export default function UploadFile({
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialUrl || null,
+  );
   const [progress, setProgress] = useState(0);
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +82,6 @@ export default function UploadFile({
       );
       // Handle success here
       if (onUploadComplete) onUploadComplete(uploadRes.data.url);
-      console.log("Uploaded:", uploadRes.data);
     } catch (err: any) {
       console.error("Upload error:", err);
       if (err.response?.status === 401) {

@@ -1,9 +1,10 @@
 import { db } from "@/src/db";
-import { options, questions } from "@/src/db/schema";
+import { options, questions, tests } from "@/src/db/schema";
 import { isAdmin } from "@/src/lib/auth-helper";
 import { adminUpdateQuestionSchema } from "@/src/lib/validations/question.validations";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
@@ -119,6 +120,13 @@ export async function DELETE(
         { status: 404 },
       );
     }
+
+    const deletedQ = deletedRows[0];
+
+    // Decrement test totals
+    await db.execute(
+      sql`UPDATE tests SET total_questions = total_questions - 1, total_marks = total_marks - ${deletedQ.marks}, updated_at = NOW() WHERE id = ${testId}`
+    );
 
     return NextResponse.json({
       success: true,

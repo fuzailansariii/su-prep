@@ -8,7 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Repeat,
-  Settings,
+  Users,
   X,
 } from "lucide-react";
 import logo from "@/public/su-cropped.png";
@@ -41,7 +41,7 @@ const adminMenu: AdminMenuItem[] = [
   },
   {
     label: "STUDENTS",
-    icon: <Settings size={18} />,
+    icon: <Users size={18} />,
     href: "/admin/students",
   },
 ];

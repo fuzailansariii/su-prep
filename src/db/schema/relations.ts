@@ -79,7 +79,7 @@ export const resultsRelations = relations(results, ({ one }) => ({
     references: [tests.id],
   }),
   attempt: one(attempts, {
-    fields: [results.testId],
+    fields: [results.attemptId],
     references: [attempts.id],
   }),
   leaderboard: one(leaderboard, {

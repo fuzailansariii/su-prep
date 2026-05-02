@@ -102,7 +102,7 @@ export default function Home() {
         <div className="flex justify-center w-full">
           <Button
             variant="default"
-            className="max-w-lg mx-auto lg:self-center w-full bg-brand-primary hover:bg-brand-primary-hover h-10 font-heading text-sm text-white font-bold"
+            className="max-w-xs mx-auto lg:self-center w-full bg-brand-primary hover:bg-brand-primary-hover h-10 font-heading text-sm text-white font-bold"
             asChild
           >
             <Link href="/mock-tests">Explore All Mock Tests</Link>

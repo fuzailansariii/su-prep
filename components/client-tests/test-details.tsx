@@ -1,10 +1,15 @@
 import { CircleCheck, Clock, FileText, Lock } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { type Test } from "@/src/db/schema/tests";
 import { formatPrice } from "@/utils/format-price";
 
 interface TestDetailProps {
   test: Test;
+  hasPurchased?: boolean;
+  attemptStatus?: "not_started" | "in_progress" | "completed";
+  attemptId?: string;
+  resultId?: string;
 }
 
 const whatsIncluded = [
@@ -13,7 +18,13 @@ const whatsIncluded = [
   "Instant Performance Results",
 ];
 
-export default function TestDetails({ test }: TestDetailProps) {
+export default function TestDetails({
+  test,
+  hasPurchased,
+  attemptStatus = "not_started",
+  attemptId,
+  resultId,
+}: TestDetailProps) {
   const discountPercent = test.originalPrice
     ? Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100)
     : null;
@@ -75,23 +86,25 @@ export default function TestDetails({ test }: TestDetailProps) {
           {/* Card body */}
           <div className="p-6 md:p-8 flex flex-col gap-6">
             {/* Price row */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
-                <span className="font-extrabold text-brand-price text-3xl font-sans">
-                  {formatPrice(test.price)}
-                </span>
-                {test.originalPrice && (
-                  <span className="text-sm text-brand-muted font-semibold line-through font-sans">
-                    {formatPrice(test.originalPrice)}
+            {!hasPurchased && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-extrabold text-brand-price text-3xl font-sans">
+                    {formatPrice(test.price)}
+                  </span>
+                  {test.originalPrice && (
+                    <span className="text-sm text-brand-muted font-semibold line-through font-sans">
+                      {formatPrice(test.originalPrice)}
+                    </span>
+                  )}
+                </div>
+                {discountPercent && discountPercent > 0 && (
+                  <span className="text-xs font-bold font-heading text-green-700 bg-green-100 px-2.5 py-1 rounded-md">
+                    {discountPercent}% OFF
                   </span>
                 )}
               </div>
-              {discountPercent && discountPercent > 0 && (
-                <span className="text-xs font-bold font-heading text-green-700 bg-green-100 px-2.5 py-1 rounded-md">
-                  {discountPercent}% OFF
-                </span>
-              )}
-            </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3">
@@ -109,18 +122,47 @@ export default function TestDetails({ test }: TestDetailProps) {
               </div>
             </div>
 
-            {/* Buy button */}
-            <button className="w-full py-4 rounded-xl bg-brand-button hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer">
-              Buy Now
-            </button>
+            {/* Buy or Action button */}
+            {hasPurchased ? (
+              attemptStatus === "completed" ? (
+                <Link
+                  className="w-full py-4 rounded-xl bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+                  href={`/test/${test.id}/result/${resultId}`}
+                >
+                  View Result
+                </Link>
+              ) : attemptStatus === "in_progress" ? (
+                <Link
+                  className="w-full py-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+                  href={`/test/${test.id}/attempt?attemptId=${attemptId}`}
+                >
+                  Resume Test
+                </Link>
+              ) : (
+                <Link
+                  className="w-full py-4 rounded-xl bg-brand-button hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+                  href={`/test/${test.id}`}
+                >
+                  Start Mock Test
+                </Link>
+              )
+            ) : (
+              <Link
+                href={`/checkout/${test.id}`}
+                className="w-full py-4 rounded-xl bg-brand-button hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
+              >
+                Buy Now
+              </Link>
+            )}
 
-            {/* Security note */}
-            <div className="flex items-center justify-center gap-2 text-brand-muted/70 mt-2">
-              <Lock size={14} />
-              <span className="text-[10px] tracking-widest font-bold font-heading uppercase text-center">
-                Secure Encrypted Payment
-              </span>
-            </div>
+            {!hasPurchased && (
+              <div className="flex items-center justify-center gap-2 text-brand-muted/70 mt-2">
+                <Lock size={14} />
+                <span className="text-[10px] tracking-widest font-bold font-heading uppercase text-center">
+                  Securely Processed by Razorpay
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import {
   Clock,
   FileText,
   Star,
+  Trash2,
 } from "lucide-react";
 import { StatRowItem } from "./ui/stat-row-item";
 import { Image } from "@imagekit/next";
@@ -14,7 +15,13 @@ import { formatPrice } from "@/utils/format-price";
 import type { Test } from "@/src/db/schema";
 import Link from "next/link";
 
-export function AdminTestCard({ test }: { test: Test }) {
+export function AdminTestCard({
+  test,
+  onDelete,
+}: {
+  test: Test;
+  onDelete?: (id: string) => void;
+}) {
   const priceDisplay = test.price === 0 ? "Free" : formatPrice(test.price);
 
   return (
@@ -24,8 +31,9 @@ export function AdminTestCard({ test }: { test: Test }) {
         {test.thumbnail && (
           <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
             <Image
+              urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
               src={test.thumbnail}
-              alt=""
+              alt="Cover Image"
               width={200}
               height={200}
               quality={70}
@@ -106,7 +114,16 @@ export function AdminTestCard({ test }: { test: Test }) {
         >
           Edit
         </Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-4">
+          {onDelete && (
+            <button
+              onClick={() => onDelete(test.id)}
+              className="text-slate-400 hover:text-red-600 transition-colors"
+              title="Delete Test"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
           <Link
             href={`/admin/tests/${test.id}`}
             className="flex items-center gap-1 text-xs font-bold font-heading text-brand-primary hover:text-brand-primary/80 transition-colors"

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { questions, options } from "@/src/db/schema";
+import { questions, options, tests } from "@/src/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { isAdmin } from "@/src/lib/auth-helper";
 import Papa from "papaparse";
+import { adminCreateQuestionSchema } from "@/src/lib/validations/question.validations";
+import { sql } from "drizzle-orm";
 
 interface CSVRow {
   order: string;
@@ -34,6 +36,66 @@ export async function POST(
 
   const { id } = await params;
   const testId = id;
+  const contentType = req.headers.get("content-type") || "";
+
+  // 1. JSON (Single Question Creation)
+  if (contentType.includes("application/json")) {
+    let attemptedOrder = 1;
+    try {
+      const body = await req.json();
+      attemptedOrder = body.order || 1;
+      const validation = adminCreateQuestionSchema.safeParse(body);
+      
+      if (!validation.success) {
+        return NextResponse.json({ error: "Validation failed", details: validation.error.format() }, { status: 400 });
+      }
+
+      const { options: optionsData, ...questionData } = validation.data;
+      const questionId = nanoid();
+
+      await db.insert(questions).values({
+        id: questionId,
+        testId,
+        ...questionData,
+      });
+
+      const newOptions = optionsData.map((opt) => ({
+        id: nanoid(),
+        questionId,
+        optionText: opt.optionText,
+        isCorrect: opt.isCorrect,
+        order: opt.order,
+      }));
+
+      await db.insert(options).values(newOptions);
+
+      // Increment test totals using Drizzle (compatible with neon-serverless Pool)
+      await db
+        .update(tests)
+        .set({
+          totalQuestions: sql`${tests.totalQuestions} + 1`,
+          totalMarks: sql`${tests.totalMarks} + ${questionData.marks}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tests.id, testId));
+
+      return NextResponse.json({ success: true, message: "Question created" });
+    } catch (err) {
+      console.error("[questions/route] JSON Insert failed:", err);
+      const isUniqueError = err instanceof Error && err.message.includes("unique_question_order");
+      return NextResponse.json(
+        {
+          error: isUniqueError 
+            ? `A question with display order ${attemptedOrder} already exists. Please choose a different order.`
+            : "Failed to create question.",
+          detail: err instanceof Error ? err.message : String(err),
+        },
+        { status: 500 },
+      );
+    }
+  }
+
+  // 2. FormData (CSV Bulk Upload)
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
 
@@ -138,6 +200,19 @@ export async function POST(
     });
 
     await db.insert(options).values(optionRows);
+
+    // Calculate total marks and update the test
+    const totalMarks = allQuestions.reduce((sum, q) => sum + q.marks, 0);
+    
+    await db
+      .update(tests)
+      .set({
+        totalQuestions: data.length,
+        totalMarks: totalMarks,
+        updatedAt: new Date(),
+      })
+      .where(eq(tests.id, testId));
+
   } catch (err) {
     // Attempt cleanup so we don't leave partial data
     await db

@@ -17,8 +17,9 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "flex flex-col",
-
+        "flex flex-col flex-1",
+        "border-b border-slate-100 last:border-b-0",
+        "md:border-b-0 md:border-r md:last:border-r-0",
         className,
       )}
     >

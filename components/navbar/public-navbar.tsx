@@ -5,18 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@clerk/nextjs";
 import { Menu, X, ArrowRight, LogOut, UserStar, User } from "lucide-react";
-import { useIsAuthenticated, useIsAdmin } from "@/src/lib/auth-client";
 import { Button } from "../ui/button";
 import Logo from "@/public/su-cropped.png";
 import { motion, AnimatePresence } from "motion/react";
+import { config } from "@/src/lib/config";
 
-// ENV (safe)
-const authAppUrl = process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "";
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-
-if (!authAppUrl || !appUrl) {
-  throw new Error("Missing public env variables");
-}
+// extract URLs from config
+const { authAppUrl, appUrl } = config;
 
 // Static links
 const publicLinks = [
@@ -24,10 +19,14 @@ const publicLinks = [
   { label: "Browse Tests", href: "/mock-tests" },
 ];
 
-export default function PublicNavbar() {
+type NavbarProps = {
+  isAuthenticated: boolean;
+  admin: boolean;
+};
+
+export default function PublicNavbar({ isAuthenticated, admin }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, isLoaded } = useIsAuthenticated();
-  const isAdmin = useIsAdmin();
+
   const pathname = usePathname();
 
   // Scroll lock (safe cleanup)
@@ -60,50 +59,35 @@ export default function PublicNavbar() {
   ];
 
   // Avoid flicker
-  const linksToShow = !isLoaded
+  const linksToShow = isAuthenticated
     ? publicLinks
-    : isAuthenticated
-      ? publicLinks
-      : [...publicLinks, ...authLinks];
+    : [...publicLinks, ...authLinks];
 
   // Active link logic
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  // Link renderer (handles external)
+  // Link render
   const renderLink = (
     link: { label: string; href: string },
     className: string,
     onClick?: () => void,
-  ) => {
-    const external = link.href.startsWith("http");
-
-    return external ? (
-      <Link
-        key={link.href}
-        href={link.href}
-        className={className}
-        onClick={onClick}
-      >
-        {link.label}
-      </Link>
-    ) : (
-      <Link
-        key={link.href}
-        href={link.href}
-        className={className}
-        onClick={onClick}
-      >
-        {link.label}
-      </Link>
-    );
-  };
+  ) => (
+    <Link
+      key={link.href}
+      href={link.href}
+      className={className}
+      onClick={onClick}
+    >
+      {link.label}
+    </Link>
+  );
 
   return (
     <>
       {/* Navbar */}
       <header className="sticky top-0 w-full z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-xs transition-all duration-300">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 h-20 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative w-10 h-10 overflow-hidden rounded-xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all duration-300">
@@ -124,7 +108,7 @@ export default function PublicNavbar() {
             {linksToShow.map((link) =>
               renderLink(
                 link,
-                `px-4 py-2.5 rounded-full text-base font-bold font-sans transition-all duration-300 ${
+                `px-3 py-1.5 rounded-full text-base font-bold font-sans transition-all duration-300 ${
                   isActive(link.href)
                     ? "bg-brand-primary/10 text-brand-primary"
                     : "text-slate-600 hover:bg-slate-50 hover:text-brand-primary"
@@ -137,49 +121,45 @@ export default function PublicNavbar() {
           <div className="flex items-center gap-3">
             {/* Desktop Auth */}
             <div className="hidden md:flex items-center gap-3">
-              {isLoaded &&
-                (isAuthenticated ? (
-                  <div className="flex items-center gap-3">
-                    <Button
-                      asChild
-                      variant="default"
-                      size="sm"
-                      className="rounded-xl font-bold bg-brand-primary hover:bg-brand-primary-hover text-white hover:text-white h-10 px-6 font-heading flex items-center gap-2"
-                    >
-                      <Link
-                        href={isAdmin ? "/admin" : "/dashboard"}
-                        className="flex items-center"
-                      >
-                        {isAdmin ? (
-                          <UserStar className="size-4 mr-1" />
-                        ) : (
-                          <User className="size-4 mr-1" />
-                        )}
-                        {isAdmin ? "Admin Panel" : "Dashboard"}
-                      </Link>
-                    </Button>
-                    <SignOutButton>
-                      <Button
-                        className="rounded-xl font-bold h-10 px-6 font-heading flex items-center gap-2"
-                        variant="destructive"
-                      >
-                        <LogOut className="size-4" />
-                        <span>Sign Out</span>
-                      </Button>
-                    </SignOutButton>
-                  </div>
-                ) : (
+              {isAuthenticated ? (
+                <div className="flex items-center gap-3">
                   <Button
                     asChild
-                    size="lg"
-                    className="bg-brand-primary hover:bg-brand-primary-hover font-heading text-sm text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
+                    variant="default"
+                    size="sm"
+                    className="rounded-xl font-bold bg-brand-primary hover:bg-brand-primary-hover text-white hover:text-white h-10 px-6 font-heading flex items-center gap-2"
                   >
-                    <Link href="/mock-tests">
-                      Get Started{" "}
-                      <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
+                    <Link href={admin ? "/admin" : "/dashboard"}>
+                      {admin ? (
+                        <UserStar className="size-4 mr-1" />
+                      ) : (
+                        <User className="size-4 mr-1" />
+                      )}
+                      {admin ? "Admin Panel" : "Dashboard"}
                     </Link>
                   </Button>
-                ))}
+                  <SignOutButton>
+                    <Button
+                      className="rounded-xl font-bold h-10 px-6 font-heading flex items-center gap-2"
+                      variant="destructive"
+                    >
+                      <LogOut className="size-4" />
+                      <span>Sign Out</span>
+                    </Button>
+                  </SignOutButton>
+                </div>
+              ) : (
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-brand-primary h-10 hover:bg-brand-primary-hover font-heading text-sm text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
+                >
+                  <Link href="/mock-tests">
+                    Get Started{" "}
+                    <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+              )}
             </div>
 
             {/* Mobile Toggle */}
@@ -262,8 +242,8 @@ export default function PublicNavbar() {
                         className="w-full rounded-2xl py-6 font-bold text-lg font-heading bg-brand-primary text-white hover:bg-brand-primary-hover"
                         onClick={() => setIsOpen(false)}
                       >
-                        <Link href={isAdmin ? "/admin" : "/dashboard"}>
-                          {isAdmin ? (
+                        <Link href={admin ? "/admin" : "/dashboard"}>
+                          {admin ? (
                             <>
                               <UserStar className="mr-2 size-6" />
                               Admin Panel
