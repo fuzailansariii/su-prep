@@ -1,6 +1,6 @@
 import { db } from "@/src/db";
 import { attempts, purchases, tests } from "@/src/db/schema";
-import { isAuthenticated } from "@/src/lib/auth-helper";
+import {  requireAuth } from "@/src/lib/auth-helper";
 import { and, eq, isNull } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import AttemptClient from "./attempt-client";
@@ -17,10 +17,7 @@ export default async function AttemptPage({
   const { testId } = await params;
   const { attemptId } = await searchParams;
 
-  const userId = await isAuthenticated();
-  if (!userId) {
-    redirect(`/sign-in?redirect_url=/test/${testId}/attempt`);
-  }
+  const userId = await requireAuth();
 
   const purchase = await db.query.purchases.findFirst({
     where: and(

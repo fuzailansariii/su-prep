@@ -118,9 +118,9 @@ export default function CheckoutClient({ test }: CheckoutClientProps) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
-      <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         {/* Summary Card */}
-        <div className="md:col-span-3 flex flex-col gap-6 bg-white rounded-3xl shadow-lg border border-slate-200 p-6 md:p-8">
+        <div className="md:col-span-7 flex flex-col gap-6 bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10">
           <h2 className="text-xl font-bold font-heading border-b border-slate-100 pb-4">
             Order Summary
           </h2>
@@ -172,7 +172,7 @@ export default function CheckoutClient({ test }: CheckoutClientProps) {
         </div>
 
         {/* Payment Action Card */}
-        <div className="md:col-span-2 flex flex-col gap-6 bg-slate-50 rounded-3xl border border-slate-200 p-6 md:p-8 h-fit">
+        <div className="md:col-span-5 flex flex-col gap-8 bg-slate-50/50 rounded-[32px] border border-slate-100 p-8 md:p-10 h-fit sticky top-24">
           <div className="flex flex-col gap-2">
             <h3 className="font-heading font-bold text-lg text-black">
               Payment details

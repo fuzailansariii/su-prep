@@ -1,8 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher(["/", "/mock-tests(.*)"]);
-
 const isUserRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/checkout(.*)",
@@ -19,19 +17,29 @@ const isAdminApiRoute = createRouteMatcher(["/api/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
-  const role = sessionClaims?.role as string | undefined;
+
+  // safer role extraction
+  const role = sessionClaims?.role;
   const isAdmin = role === "admin";
 
-  const signInUrl = new URL(
-    (process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "https://shippingupdates.in") +
-      "/sign-in",
-  );
+  const isApi = req.nextUrl.pathname.startsWith("/api");
+
+  const signInUrl = new URL("/sign-in", req.url);
   signInUrl.searchParams.set("redirect_url", req.url);
 
-  // Protect admin routes
+  // Admin routes
   if (isAdminRoute(req) || isAdminApiRoute(req)) {
-    if (!userId) return NextResponse.redirect(signInUrl);
-    if (!isAdmin) return NextResponse.redirect(new URL("/", req.url));
+    if (!userId) {
+      return isApi
+        ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        : NextResponse.redirect(signInUrl);
+    }
+
+    if (!isAdmin) {
+      return isApi
+        ? NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        : NextResponse.redirect(new URL("/", req.url));
+    }
   }
 
   // Block admin from user routes
@@ -39,9 +47,11 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
-  // Protect user routes
+  // User routes
   if ((isUserRoute(req) || isUserApiRoute(req)) && !userId) {
-    return NextResponse.redirect(signInUrl);
+    return isApi
+      ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      : NextResponse.redirect(signInUrl);
   }
 
   return NextResponse.next();

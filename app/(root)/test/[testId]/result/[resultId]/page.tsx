@@ -1,7 +1,7 @@
 import Container from "@/components/container";
 import { db } from "@/src/db";
 import { results } from "@/src/db/schema";
-import { isAuthenticated } from "@/src/lib/auth-helper";
+import { requireAuth } from "@/src/lib/auth-helper";
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -22,7 +22,7 @@ type ResultPageProps = {
 export default async function ResultPage({ params }: ResultPageProps) {
   const { testId, resultId } = await params;
 
-  const userId = await isAuthenticated();
+  const userId = await requireAuth();
   if (!userId) {
     redirect(`/sign-in?redirect_url=/test/${testId}/result/${resultId}`);
   }

@@ -7,7 +7,7 @@ import {
   results,
   tests,
 } from "@/src/db/schema";
-import { isAuthenticated } from "@/src/lib/auth-helper";
+import { requireAuth } from "@/src/lib/auth-helper";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse } from "next/server";
@@ -22,10 +22,10 @@ type SubmitBody = {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ attemptId: string }> }
+  { params }: { params: Promise<{ attemptId: string }> },
 ) {
   try {
-    const userId = await isAuthenticated();
+    const userId = await requireAuth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
@@ -37,14 +37,14 @@ export async function POST(
       where: and(
         eq(attempts.id, attemptId),
         eq(attempts.clerkUserId, userId),
-        eq(attempts.status, "in_progress")
+        eq(attempts.status, "in_progress"),
       ),
     });
 
     if (!attempt) {
       return NextResponse.json(
         { error: "Attempt not found or already completed" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -122,7 +122,7 @@ export async function POST(
           wrongCount++;
           if (test.negativeMarking) {
             marksAwarded = -Math.round(
-              question.marks * ((test.negativeMarkFraction ?? 25) / 100)
+              question.marks * ((test.negativeMarkFraction ?? 25) / 100),
             );
           } else {
             marksAwarded = 0;
@@ -146,11 +146,9 @@ export async function POST(
     // Clamp scored marks to 0 minimum
     const finalScoredMarks = Math.max(0, totalScoredMarks);
     const timeTaken = Math.floor(
-      (Date.now() - attempt.startedAt.getTime()) / 1000
+      (Date.now() - attempt.startedAt.getTime()) / 1000,
     );
-    const percentage = Math.round(
-      (finalScoredMarks / test.totalMarks) * 100
-    );
+    const percentage = Math.round((finalScoredMarks / test.totalMarks) * 100);
 
     // 6. Write everything atomically inside a transaction
     const resultId = nanoid();
@@ -162,14 +160,12 @@ export async function POST(
         .where(eq(attemptAnswers.attemptId, attemptId));
 
       if (existingAnswerIds.length > 0) {
-        await tx
-          .delete(attemptAnswers)
-          .where(
-            inArray(
-              attemptAnswers.id,
-              existingAnswerIds.map((r) => r.id)
-            )
-          );
+        await tx.delete(attemptAnswers).where(
+          inArray(
+            attemptAnswers.id,
+            existingAnswerIds.map((r) => r.id),
+          ),
+        );
       }
 
       if (answerRows.length > 0) {
@@ -208,7 +204,7 @@ export async function POST(
     console.error("[attempt/submit]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
