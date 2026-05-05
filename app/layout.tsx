@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SU PREP | Shipping Mock Tests",
+  title: "Mock Test | By Shipping Updates",
   description:
     "Prepare for shipping entrance exams with realistic mock tests. Analyze your performance and improve your score.",
 };

@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               className="rounded-md"
             />
             <h1 className="font-body font-bold text-[#1E2A5A] text-xl">
-              SU PREP
+              SU Mock Test
             </h1>
           </div>
           <Button
@@ -52,4 +52,3 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
-

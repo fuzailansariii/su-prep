@@ -91,13 +91,13 @@ export default function PublicNavbar({ isAuthenticated, admin }: NavbarProps) {
             <div className="relative w-10 h-10 overflow-hidden rounded-xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all duration-300">
               <Image
                 src={Logo}
-                alt="SU PREP Logo"
+                alt="SU Mock Test | By Shipping Updates Logo"
                 fill
                 className="object-cover"
               />
             </div>
             <span className="font-heading font-black text-2xl tracking-tight text-brand-primary">
-              SU PREP
+              SU Mock Test
             </span>
           </Link>
 

@@ -19,8 +19,14 @@ const supportLinks = [
 ];
 
 const legalLinks = [
-  { label: "Privacy Policy", href: "https://shippingupdates.in/privacy-policy" },
-  { label: "Terms & Conditions", href: "https://shippingupdates.in/terms-condition" },
+  {
+    label: "Privacy Policy",
+    href: "https://shippingupdates.in/privacy-policy",
+  },
+  {
+    label: "Terms & Conditions",
+    href: "https://shippingupdates.in/terms-condition",
+  },
   { label: "Refund Policy", href: "https://shippingupdates.in/refund-policy" },
 ];
 
@@ -60,13 +66,13 @@ export default function Footer() {
               <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-white/10 group-hover:border-brand-primary/40 transition-colors">
                 <Image
                   src={Logo}
-                  alt="SU PREP Logo"
+                  alt="Mock Test | By Shipping Updates Logo"
                   fill
                   className="object-cover"
                 />
               </div>
               <span className="text-white text-2xl font-black font-heading tracking-tight">
-                SU PREP
+                SU Mock Test
               </span>
             </Link>
 
@@ -136,13 +142,12 @@ export default function Footer() {
               ))}
             </ul>
           </div>
-
         </div>
 
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-7">
           <p className="text-xs text-slate-600 font-sans text-center sm:text-left">
-            © {new Date().getFullYear()} SU PREP · A product by{" "}
+            © {new Date().getFullYear()} SU Mock Test · A product by{" "}
             <Link
               href="https://shippingupdates.in"
               target="_blank"

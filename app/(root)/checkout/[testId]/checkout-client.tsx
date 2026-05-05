@@ -42,7 +42,7 @@ export default function CheckoutClient({ test }: CheckoutClientProps) {
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "SU Prep",
+        name: "Mock Test | By Shipping Updates",
         description: `Purchase: ${test.title}`,
         order_id: orderData.orderId,
         handler: async function (response: any) {

@@ -108,7 +108,7 @@ export default function AdminSidebar({ isOpen, onClose }: Props) {
         className="rounded-md"
       />
       <div className="leading-tight font-heading">
-        <p className="text-lg font-bold text-[#3730A3]">SU PREP</p>
+        <p className="text-lg font-bold text-[#3730A3]">SU Mock Test</p>
         <p className="text-[10px] text-[#64748B] tracking-widest text-center font-semibold">
           ADMIN
         </p>
