@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.12",
+    "@hookform/resolvers": "^5.2.2",
     "@imagekit/next": "^2.1.5",
     "@neondatabase/serverless": "^1.0.2",
     "@types/papaparse": "^5.5.2",
@@ -19,6 +20,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
     "nanoid": "^5.1.7",
@@ -30,6 +32,7 @@
     "razorpay": "^2.9.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hook-form": "^7.75.0",
     "shadcn": "^4.2.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",

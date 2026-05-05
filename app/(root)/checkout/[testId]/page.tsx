@@ -48,14 +48,14 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   }
 
   return (
-    <Container className="max-w-4xl py-12">
+    <Container className="max-w-5xl py-12 md:py-20">
       <div className="flex flex-col items-center">
-        <div className="w-full mb-8 text-center">
-          <h1 className="text-3xl font-heading font-bold text-black mb-2">
+        <div className="w-full mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-heading font-bold text-black mb-4">
             Secure Checkout
           </h1>
-          <p className="text-brand-muted font-body">
-            Complete your purchase securely to get instant access.
+          <p className="text-lg text-brand-muted font-body max-w-2xl mx-auto">
+            Get instant access to your mock test and start practicing immediately.
           </p>
         </div>
 

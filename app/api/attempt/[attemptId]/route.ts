@@ -1,20 +1,15 @@
 import { db } from "@/src/db";
-import {
-  attempts,
-  options,
-  questions,
-  tests,
-} from "@/src/db/schema";
-import { isAuthenticated } from "@/src/lib/auth-helper";
+import { attempts, options, questions, tests } from "@/src/db/schema";
+import { requireAuth } from "@/src/lib/auth-helper";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ attemptId: string }> }
+  { params }: { params: Promise<{ attemptId: string }> },
 ) {
   try {
-    const userId = await isAuthenticated();
+    const userId = await requireAuth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
@@ -26,7 +21,7 @@ export async function GET(
       where: and(
         eq(attempts.id, attemptId),
         eq(attempts.clerkUserId, userId),
-        eq(attempts.status, "in_progress")
+        eq(attempts.status, "in_progress"),
       ),
     });
 
@@ -70,7 +65,7 @@ export async function GET(
     // Calculate remaining seconds
     const timeLimitSeconds = test.duration * 60;
     const elapsedSeconds = Math.floor(
-      (Date.now() - attempt.startedAt.getTime()) / 1000
+      (Date.now() - attempt.startedAt.getTime()) / 1000,
     );
     const remainingSeconds = Math.max(0, timeLimitSeconds - elapsedSeconds);
 
@@ -84,7 +79,7 @@ export async function GET(
     console.error("[attempt/GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

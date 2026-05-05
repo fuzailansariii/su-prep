@@ -49,9 +49,7 @@ export default function PublicNavbar({ isAuthenticated, admin }: NavbarProps) {
 
   // Auth URL helper
   const getAuthUrl = (type: "sign-in" | "sign-up") =>
-    `${authAppUrl}/${type}?redirect_url=${encodeURIComponent(
-      `${appUrl}${pathname}`,
-    )}`;
+    `/${type}?redirect_url=${encodeURIComponent(pathname)}`;
 
   const authLinks = [
     { label: "Login", href: getAuthUrl("sign-in") },

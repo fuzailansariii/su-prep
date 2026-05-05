@@ -4,7 +4,7 @@ import ListCard from "@/components/ui/list-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { db } from "@/src/db";
 import { attempts, purchases, tests } from "@/src/db/schema";
-import { isAuthenticated } from "@/src/lib/auth-helper";
+import { requireAuth } from "@/src/lib/auth-helper";
 import { and, eq, isNull } from "drizzle-orm";
 import {
   ArrowLeft,
@@ -27,13 +27,13 @@ export default async function TestInstruction({
 }: TestInstructionProps) {
   const { testId } = await params;
 
-  // 1. auth check
-  const userId = await isAuthenticated();
+  // auth check
+  const userId = await requireAuth();
   if (!userId) {
     redirect(`/sign-in?redirect_url=/test/${testId}`);
   }
 
-  // 2. purchase check
+  // purchase check
   const purchase = await db.query.purchases.findFirst({
     where: and(
       eq(purchases.testId, testId),
@@ -46,7 +46,7 @@ export default async function TestInstruction({
     redirect(`/mock-tests/${testId}`);
   }
 
-  // 3. test exists check
+  // test exists check
   const test = await db.query.tests.findFirst({
     where: and(
       eq(tests.id, testId),
@@ -59,7 +59,7 @@ export default async function TestInstruction({
     notFound();
   }
 
-  // 4. completed attempt check → redirect to result
+  // completed attempt check → redirect to result
   const completedAttempt = await db.query.attempts.findFirst({
     where: and(
       eq(attempts.clerkUserId, userId),
@@ -72,7 +72,7 @@ export default async function TestInstruction({
     redirect(`/test/${testId}/result/${completedAttempt.id}`);
   }
 
-  // 5. in_progress attempt check → resume
+  // in_progress attempt check → resume
   const inProgressAttempt = await db.query.attempts.findFirst({
     where: and(
       eq(attempts.clerkUserId, userId),

@@ -6,7 +6,7 @@ import {
   questions,
   tests,
 } from "@/src/db/schema";
-import { isAuthenticated } from "@/src/lib/auth-helper";
+import { requireAuth } from "@/src/lib/auth-helper";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     // check if the user is authenticaed
-    const userId = await isAuthenticated();
+    const userId = await requireAuth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
