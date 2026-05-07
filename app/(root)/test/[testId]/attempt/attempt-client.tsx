@@ -67,10 +67,9 @@ export default function AttemptClient({
         setFetchState("ready");
       } catch (err) {
         if (cancelled) return;
-        const msg =
-          axios.isAxiosError(err)
-            ? (err.response?.data?.error ?? "Failed to load test")
-            : "Something went wrong";
+        const msg = axios.isAxiosError(err)
+          ? (err.response?.data?.error ?? "Failed to load test")
+          : "Something went wrong";
         toast.error(msg);
         setFetchState("error");
       }
@@ -96,10 +95,9 @@ export default function AttemptClient({
           selectedOptionIds: answers[q.id] ?? [],
         }));
 
-        const { data } = await axios.post(
-          `/api/attempt/${attemptId}/submit`,
-          { answers: payload }
-        );
+        const { data } = await axios.post(`/api/attempt/${attemptId}/submit`, {
+          answers: payload,
+        });
 
         if (isAutoSubmit) {
           toast.info("Time's up! Test submitted automatically.");
@@ -111,14 +109,13 @@ export default function AttemptClient({
       } catch (err) {
         hasAutoSubmitted.current = false; // allow retry
         setIsSubmitting(false);
-        const msg =
-          axios.isAxiosError(err)
-            ? (err.response?.data?.error ?? "Submission failed")
-            : "Something went wrong";
+        const msg = axios.isAxiosError(err)
+          ? (err.response?.data?.error ?? "Submission failed")
+          : "Something went wrong";
         toast.error(msg);
       }
     },
-    [answers, attemptId, isSubmitting, questions, router, testId]
+    [answers, attemptId, isSubmitting, questions, router, testId],
   );
 
   // ── Option select handler ──
@@ -148,7 +145,7 @@ export default function AttemptClient({
         }
       });
     },
-    [currentIndex, questions]
+    [currentIndex, questions],
   );
 
   // ── Navigation ──
@@ -209,7 +206,7 @@ export default function AttemptClient({
     <div className="min-h-screen bg-[#F2F3FF] flex flex-col">
       {/* ── Sticky Header ── */}
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-border">
-        <Container className="flex items-center justify-between gap-4 py-3">
+        <Container className="flex items-center justify-between gap-4 py-3 lg:py-5">
           <div className="flex items-center gap-2 min-w-0">
             <BookOpen className="size-4 shrink-0 text-brand-primary" />
             <span className="font-heading font-bold text-sm text-brand-primary truncate">
@@ -225,12 +222,9 @@ export default function AttemptClient({
 
       {/* ── Main Content ── */}
       <main className="flex-1">
-        <Container className="max-w-2xl flex flex-col gap-5 py-6">
+        <Container className="max-w-2xl flex flex-col gap-5 py-6 md:py-8 lg:py-10">
           {/* Progress bar */}
-          <ProgressBar
-            current={currentIndex + 1}
-            total={questions.length}
-          />
+          <ProgressBar current={currentIndex + 1} total={questions.length} />
 
           {/* Question card */}
           {currentQuestion && (

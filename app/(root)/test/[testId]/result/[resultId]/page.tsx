@@ -37,6 +37,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
     with: {
       test: true,
       attempt: true,
+      leaderboard: true,
     },
   });
 
@@ -46,20 +47,59 @@ export default async function ResultPage({ params }: ResultPageProps) {
 
   return (
     <Container className="max-w-4xl bg-[#F2F3FF] flex flex-col gap-6 py-8 min-h-screen">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-heading text-4xl tracking-tight font-bold text-brand-primary">
-          Test Results
-        </h1>
-        <p className="text-brand-muted font-sans font-medium">
-          {result.test.title}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-heading text-4xl tracking-tight font-bold text-brand-primary">
+            Test Results
+          </h1>
+          <p className="text-brand-muted font-sans font-medium">
+            {result.test.title}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="font-heading font-bold"
+          >
+            <Link href={`/leaderboard/${testId}`}>View Leaderboard</Link>
+          </Button>
+          <Button
+            asChild
+            className="bg-brand-primary hover:bg-brand-primary-hover font-heading font-bold"
+          >
+            <Link href={`/dashboard`}>Dashboard</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Rank Card */}
+        <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+          {result.leaderboard?.rank && result.leaderboard.rank <= 3 && (
+            <div className={`absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full pointer-events-none ${
+              result.leaderboard.rank === 1 ? "bg-yellow-500" :
+              result.leaderboard.rank === 2 ? "bg-slate-500" :
+              "bg-amber-600"
+            }`} />
+          )}
+          <div className="h-16 w-16 bg-brand-label rounded-full flex items-center justify-center">
+            <Trophy className="h-8 w-8 text-brand-primary" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-sans text-brand-muted font-medium mb-1">
+              Global Rank
+            </p>
+            <p className="text-3xl font-heading font-bold text-foreground">
+              {result.leaderboard?.rank ? `#${result.leaderboard.rank}` : "-"}
+            </p>
+          </div>
+        </div>
+
         {/* Score Card */}
         <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col items-center justify-center gap-3">
           <div className="h-16 w-16 bg-brand-label rounded-full flex items-center justify-center">
-            <Trophy className="h-8 w-8 text-brand-primary" />
+            <Target className="h-8 w-8 text-brand-primary" />
           </div>
           <div className="text-center">
             <p className="text-sm font-sans text-brand-muted font-medium mb-1">
@@ -77,7 +117,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
         {/* Percentage Card */}
         <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col items-center justify-center gap-3">
           <div className="h-16 w-16 bg-brand-label rounded-full flex items-center justify-center">
-            <Target className="h-8 w-8 text-brand-primary" />
+            <CheckCircle className="h-8 w-8 text-brand-primary" />
           </div>
           <div className="text-center">
             <p className="text-sm font-sans text-brand-muted font-medium mb-1">
@@ -102,16 +142,6 @@ export default async function ResultPage({ params }: ResultPageProps) {
               {Math.floor(result.timeTaken / 60)}m {result.timeTaken % 60}s
             </p>
           </div>
-        </div>
-
-        {/* Actions Card */}
-        <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col items-center justify-center gap-4">
-          <Button
-            asChild
-            className="w-full bg-brand-primary hover:bg-brand-primary-hover font-heading font-bold h-11"
-          >
-            <Link href={`/dashboard`}>Back to Dashboard</Link>
-          </Button>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import {
   tests,
 } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
+import { updateUserRank } from "@/src/lib/leaderboard";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse } from "next/server";
@@ -199,7 +200,10 @@ export async function POST(
       });
     });
 
-    return NextResponse.json({ resultId });
+    // Calculate and save user rank
+    const rank = await updateUserRank(attempt.testId, userId, resultId);
+
+    return NextResponse.json({ resultId, rank });
   } catch (error) {
     console.error("[attempt/submit]", error);
     return NextResponse.json(
