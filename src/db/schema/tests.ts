@@ -23,7 +23,7 @@ export const tests = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     thumbnail: text("thumbnail"),
-    totalQuestions: integer("total_questions").notNull(),
+    totalQuestions: integer("total_questions").default(0).notNull(),
     price: integer("price").notNull(), // in paise (e.g. 49900 = ₹499)
     originalPrice: integer("original_price"), // in paise, optional
     difficulty: difficultyEnum("difficulty").default("medium").notNull(),

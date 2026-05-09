@@ -1,13 +1,4 @@
-import {
-  BookOpen,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  FileText,
-  Star,
-  Trash2,
-} from "lucide-react";
-import { StatRowItem } from "./ui/stat-row-item";
+import { BookOpen, ChevronRight, FileText, Layers, Star, Trash2 } from "lucide-react";
 import { Image } from "@imagekit/next";
 import { StatusBadge } from "./ui/status-badge";
 import { DifficultyBadge } from "./ui/difficulty-badge";
@@ -17,9 +8,11 @@ import Link from "next/link";
 
 export function AdminTestCard({
   test,
+  setsCount = 0,
   onDelete,
 }: {
   test: Test;
+  setsCount?: number;
   onDelete?: (id: string) => void;
 }) {
   const priceDisplay = test.price === 0 ? "Free" : formatPrice(test.price);
@@ -75,20 +68,16 @@ export function AdminTestCard({
       )}
 
       {/* Stats row */}
-      <div className="flex items-center gap-4 flex-wrap border-t border-slate-100 pt-3">
-        <StatRowItem icon={Clock} value={`${test.duration} mins`} />
-        <StatRowItem
-          icon={BookOpen}
-          value={`${test.totalQuestions} questions`}
-        />
-        <StatRowItem icon={CheckCircle2} value={`${test.totalMarks} marks`} />
-
-        {test.negativeMarking && (
-          <span className="text-[11px] bg-red-50 text-red-600 border border-red-100 rounded-md px-1.5 py-0.5 font-heading font-bold">
-            {(test.negativeMarkFraction ?? 25) / 100} neg
-          </span>
-        )}
-
+      <div className="flex items-center gap-3 flex-wrap border-t border-slate-100 pt-3">
+        <span className="flex items-center gap-1 text-xs text-slate-500 font-sans">
+          <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+          {test.totalQuestions} questions
+        </span>
+        <span className="text-slate-200">·</span>
+        <span className="flex items-center gap-1 text-xs text-slate-500 font-sans">
+          <Layers className="w-3.5 h-3.5 text-slate-400" />
+          {setsCount} set{setsCount !== 1 ? "s" : ""}
+        </span>
         <span className="ml-auto text-[11px] text-slate-300 font-sans">
           {new Date(test.createdAt).toLocaleDateString("en-IN", {
             day: "numeric",
@@ -101,11 +90,11 @@ export function AdminTestCard({
       {/* Action row */}
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
         <Link
-          href={`/admin/tests/${test.id}/questions`}
+          href={`/admin/tests/${test.id}/sets`}
           className="flex items-center gap-1.5 text-xs font-bold font-heading text-slate-500 hover:text-brand-primary transition-colors"
         >
           <FileText className="w-3.5 h-3.5" />
-          Questions
+          Manage Sets
         </Link>
         <span className="text-slate-200">·</span>
         <Link

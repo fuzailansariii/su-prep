@@ -3,12 +3,15 @@ import { results, leaderboard } from "@/src/db/schema";
 import { eq, asc, and, or, gt, lt, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
-export async function recalculateLeaderboard(testId: string, clerkUserId: string) {
-  // 1. Fetch all results for this test
+export async function recalculateLeaderboard(
+  setId: string,
+  clerkUserId: string,
+) {
+  // 1. Fetch all results for this set
   const allResults = await db
     .select()
     .from(results)
-    .where(eq(results.testId, testId));
+    .where(eq(results.setId, setId));
 
   // 2. Sort in JS using dense ranking logic
   const sorted = allResults.sort((a, b) => {
@@ -19,7 +22,7 @@ export async function recalculateLeaderboard(testId: string, clerkUserId: string
 
   // 3. Assign dense ranks
   const rankEntries: {
-    testId: string;
+    setId: string;
     clerkUserId: string;
     resultId: string;
     rank: number;
@@ -42,7 +45,7 @@ export async function recalculateLeaderboard(testId: string, clerkUserId: string
     }
 
     rankEntries.push({
-      testId,
+      setId,
       clerkUserId: sorted[i].clerkUserId,
       resultId: sorted[i].id,
       rank: currentRank,
@@ -59,14 +62,14 @@ export async function recalculateLeaderboard(testId: string, clerkUserId: string
       .insert(leaderboard)
       .values({
         id: nanoid(),
-        testId: entry.testId,
+        setId: entry.setId,
         clerkUserId: entry.clerkUserId,
         resultId: entry.resultId,
         rank: entry.rank,
         createdAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: [leaderboard.testId, leaderboard.clerkUserId],
+        target: [leaderboard.setId, leaderboard.clerkUserId],
         set: {
           rank: entry.rank,
           resultId: entry.resultId,
@@ -78,7 +81,7 @@ export async function recalculateLeaderboard(testId: string, clerkUserId: string
   return targetUserRank;
 }
 
-export async function getLeaderboard(testId: string) {
+export async function getLeaderboard(setId: string) {
   return await db
     .select({
       rank: leaderboard.rank,
@@ -92,6 +95,6 @@ export async function getLeaderboard(testId: string) {
     })
     .from(leaderboard)
     .innerJoin(results, eq(leaderboard.resultId, results.id))
-    .where(eq(leaderboard.testId, testId))
+    .where(eq(leaderboard.setId, setId))
     .orderBy(asc(leaderboard.rank));
 }

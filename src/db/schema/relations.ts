@@ -74,6 +74,10 @@ export const purchasesRelations = relations(purchases, ({ one }) => ({
 // ── ATTEMPTS ──
 // An attempt belongs to ONE test, has MANY answers, and has ONE result
 export const attemptsRelations = relations(attempts, ({ one, many }) => ({
+  test: one(tests, {
+    fields: [attempts.testId],
+    references: [tests.id],
+  }),
   set: one(sets, {
     fields: [attempts.setId],
     references: [sets.id],
@@ -101,6 +105,10 @@ export const attemptAnswersRelations = relations(attemptAnswers, ({ one }) => ({
 // ── RESULTS ──
 // A result belongs to ONE test, belongs to ONE attempt, has ONE leaderboard entry
 export const resultsRelations = relations(results, ({ one }) => ({
+  test: one(tests, {
+    fields: [results.testId],
+    references: [tests.id],
+  }),
   set: one(sets, {
     fields: [results.setId],
     references: [sets.id],

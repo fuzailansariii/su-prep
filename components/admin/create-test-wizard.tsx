@@ -50,7 +50,7 @@ export default function CreateTestWizard() {
 
   useEffect(() => {
     if (step !== "done") return;
-    const t = setTimeout(() => router.push("/admin/tests"), 1500);
+    const t = setTimeout(() => router.push("/admin/tests"), 1000);
     return () => clearTimeout(t);
   }, [step]);
 

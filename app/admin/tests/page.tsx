@@ -54,8 +54,10 @@ function FilterTab({
 // ─────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────
+type TestWithCount = Test & { setsCount: number };
+
 export default function AdminTestsPage() {
-  const [tests, setTests] = useState<Test[]>([]);
+  const [tests, setTests] = useState<TestWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
@@ -72,7 +74,11 @@ export default function AdminTestsPage() {
       setTests((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
       console.error(err);
-      alert("Failed to delete test.");
+      if (err instanceof AxiosError) {
+        setError(
+          err.response?.data?.message || "Failed to delete test. Try again.",
+        );
+      } else setError("Failed to delete test. Try again.");
     } finally {
       setIsDeleting(false);
       close();
@@ -232,7 +238,7 @@ export default function AdminTestsPage() {
       {!loading && !error && visible.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {visible.map((test) => (
-            <AdminTestCard key={test.id} test={test} onDelete={handleDelete} />
+            <AdminTestCard key={test.id} test={test} setsCount={test.setsCount} onDelete={handleDelete} />
           ))}
         </div>
       )}
