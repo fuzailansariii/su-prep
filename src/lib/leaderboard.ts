@@ -3,64 +3,79 @@ import { results, leaderboard } from "@/src/db/schema";
 import { eq, asc, and, or, gt, lt, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
-export async function updateUserRank(
-  testId: string,
-  clerkUserId: string,
-  resultId: string,
-) {
-  // Fetch the user's result to compare against others
-  const userResult = await db.query.results.findFirst({
-    where: eq(results.id, resultId),
+export async function recalculateLeaderboard(testId: string, clerkUserId: string) {
+  // 1. Fetch all results for this test
+  const allResults = await db
+    .select()
+    .from(results)
+    .where(eq(results.testId, testId));
+
+  // 2. Sort in JS using dense ranking logic
+  const sorted = allResults.sort((a, b) => {
+    if (b.scoredMarks !== a.scoredMarks) return b.scoredMarks - a.scoredMarks;
+    if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+    return a.timeTaken - b.timeTaken;
   });
 
-  if (!userResult) return 1;
+  // 3. Assign dense ranks
+  const rankEntries: {
+    testId: string;
+    clerkUserId: string;
+    resultId: string;
+    rank: number;
+  }[] = [];
 
-  // Calculate dense rank: count distinct combinations of (scoredMarks, percentage, timeTaken) that are strictly better
-  const betterCountResult = await db
-    .select({
-      count: sql<number>`count(distinct (${results.scoredMarks}, ${results.percentage}, ${results.timeTaken}))`,
-    })
-    .from(results)
-    .where(
-      and(
-        eq(results.testId, testId),
-        or(
-          gt(results.scoredMarks, userResult.scoredMarks),
-          and(
-            eq(results.scoredMarks, userResult.scoredMarks),
-            gt(results.percentage, userResult.percentage),
-          ),
-          and(
-            eq(results.scoredMarks, userResult.scoredMarks),
-            eq(results.percentage, userResult.percentage),
-            lt(results.timeTaken, userResult.timeTaken),
-          ),
-        ),
-      ),
-    );
+  let currentRank = 1;
+  let targetUserRank = 1;
 
-  const rank = Number(betterCountResult[0].count) + 1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
 
-  // Upsert ONLY this user's rank into the leaderboard
-  await db
-    .insert(leaderboard)
-    .values({
-      id: nanoid(),
+      const isTied =
+        curr.scoredMarks === prev.scoredMarks &&
+        curr.percentage === prev.percentage &&
+        curr.timeTaken === prev.timeTaken;
+
+      if (!isTied) currentRank = i + 1; // dense ranking
+    }
+
+    rankEntries.push({
       testId,
-      clerkUserId,
-      resultId,
-      rank,
-      createdAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: [leaderboard.testId, leaderboard.clerkUserId],
-      set: {
-        rank,
-        resultId,
-      },
+      clerkUserId: sorted[i].clerkUserId,
+      resultId: sorted[i].id,
+      rank: currentRank,
     });
 
-  return rank;
+    if (sorted[i].clerkUserId === clerkUserId) {
+      targetUserRank = currentRank;
+    }
+  }
+
+  // 4. Upsert ALL ranks into leaderboard to ensure previously ranked users are properly shifted down
+  for (const entry of rankEntries) {
+    await db
+      .insert(leaderboard)
+      .values({
+        id: nanoid(),
+        testId: entry.testId,
+        clerkUserId: entry.clerkUserId,
+        resultId: entry.resultId,
+        rank: entry.rank,
+        createdAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [leaderboard.testId, leaderboard.clerkUserId],
+        set: {
+          rank: entry.rank,
+          resultId: entry.resultId,
+        },
+      });
+  }
+
+  // Return the specific user's new rank so it can be displayed on the result page
+  return targetUserRank;
 }
 
 export async function getLeaderboard(testId: string) {

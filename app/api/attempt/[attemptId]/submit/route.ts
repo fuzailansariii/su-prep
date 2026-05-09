@@ -8,7 +8,7 @@ import {
   tests,
 } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
-import { updateUserRank } from "@/src/lib/leaderboard";
+import { recalculateLeaderboard } from "@/src/lib/leaderboard";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse } from "next/server";
@@ -200,8 +200,8 @@ export async function POST(
       });
     });
 
-    // Calculate and save user rank
-    const rank = await updateUserRank(attempt.testId, userId, resultId);
+    // Recalculate all ranks and get the current user's rank
+    const rank = await recalculateLeaderboard(attempt.testId, userId);
 
     return NextResponse.json({ resultId, rank });
   } catch (error) {

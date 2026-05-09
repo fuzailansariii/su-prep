@@ -1,5 +1,5 @@
 {
-  "id": "d0962ac8-a5d4-4b50-8b86-757898c40c51",
+  "id": "5b13b79c-82bc-449e-b0fa-d4270966971e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -32,43 +32,23 @@
           "primaryKey": false,
           "notNull": false
         },
-        "duration": {
-          "name": "duration",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "total_questions": {
           "name": "total_questions",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "total_marks": {
-          "name": "total_marks",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "negative_marking": {
-          "name": "negative_marking",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "negative_mark_fraction": {
-          "name": "negative_mark_fraction",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 25
-        },
         "price": {
           "name": "price",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "original_price": {
+          "name": "original_price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "difficulty": {
           "name": "difficulty",
@@ -265,8 +245,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "test_id": {
-          "name": "test_id",
+        "set_id": {
+          "name": "set_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -304,8 +284,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "section": {
-          "name": "section",
+        "section_id": {
+          "name": "section_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -330,7 +310,7 @@
           "name": "unique_question_order",
           "columns": [
             {
-              "expression": "test_id",
+              "expression": "set_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -347,11 +327,11 @@
           "method": "btree",
           "with": {}
         },
-        "idx_question_test": {
-          "name": "idx_question_test",
+        "idx_question_set": {
+          "name": "idx_question_set",
           "columns": [
             {
-              "expression": "test_id",
+              "expression": "set_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -364,12 +344,25 @@
         }
       },
       "foreignKeys": {
-        "questions_test_id_tests_id_fk": {
-          "name": "questions_test_id_tests_id_fk",
+        "questions_set_id_sets_id_fk": {
+          "name": "questions_set_id_sets_id_fk",
           "tableFrom": "questions",
-          "tableTo": "tests",
+          "tableTo": "sets",
           "columnsFrom": [
-            "test_id"
+            "set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "questions_section_id_sections_id_fk": {
+          "name": "questions_section_id_sections_id_fk",
+          "tableFrom": "questions",
+          "tableTo": "sections",
+          "columnsFrom": [
+            "section_id"
           ],
           "columnsTo": [
             "id"
@@ -562,6 +555,13 @@
           "notNull": true,
           "default": false
         },
+        "is_marked_for_review": {
+          "name": "is_marked_for_review",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "marks_awarded": {
           "name": "marks_awarded",
           "type": "integer",
@@ -686,6 +686,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "set_id": {
+          "name": "set_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paused_at": {
+          "name": "paused_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "status": {
           "name": "status",
           "type": "attempt_status",
@@ -766,6 +778,19 @@
           ],
           "onDelete": "restrict",
           "onUpdate": "no action"
+        },
+        "attempts_set_id_sets_id_fk": {
+          "name": "attempts_set_id_sets_id_fk",
+          "tableFrom": "attempts",
+          "tableTo": "sets",
+          "columnsFrom": [
+            "set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -784,8 +809,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "test_id": {
-          "name": "test_id",
+        "set_id": {
+          "name": "set_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -817,11 +842,11 @@
         }
       },
       "indexes": {
-        "idx_leaderboard_test": {
-          "name": "idx_leaderboard_test",
+        "idx_leaderboard_set": {
+          "name": "idx_leaderboard_set",
           "columns": [
             {
-              "expression": "test_id",
+              "expression": "set_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -851,7 +876,7 @@
           "name": "unique_leaderboard_user",
           "columns": [
             {
-              "expression": "test_id",
+              "expression": "set_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -870,12 +895,12 @@
         }
       },
       "foreignKeys": {
-        "leaderboard_test_id_tests_id_fk": {
-          "name": "leaderboard_test_id_tests_id_fk",
+        "leaderboard_set_id_sets_id_fk": {
+          "name": "leaderboard_set_id_sets_id_fk",
           "tableFrom": "leaderboard",
-          "tableTo": "tests",
+          "tableTo": "sets",
           "columnsFrom": [
-            "test_id"
+            "set_id"
           ],
           "columnsTo": [
             "id"
@@ -924,6 +949,19 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "set_id": {
+          "name": "set_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marks_lost": {
+          "name": "marks_lost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "attempt_id": {
           "name": "attempt_id",
@@ -1012,6 +1050,19 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
+        "results_set_id_sets_id_fk": {
+          "name": "results_set_id_sets_id_fk",
+          "tableFrom": "results",
+          "tableTo": "sets",
+          "columnsFrom": [
+            "set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
         "results_attempt_id_attempts_id_fk": {
           "name": "results_attempt_id_attempts_id_fk",
           "tableFrom": "results",
@@ -1036,6 +1087,249 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sets": {
+      "name": "sets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "test_id": {
+          "name": "test_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration": {
+          "name": "duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_questions": {
+          "name": "total_questions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_marks": {
+          "name": "total_marks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "negative_marking": {
+          "name": "negative_marking",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "negative_mark_fraction": {
+          "name": "negative_mark_fraction",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 25
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "test_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_sets_test": {
+          "name": "idx_sets_test",
+          "columns": [
+            {
+              "expression": "test_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "unique_set_order": {
+          "name": "unique_set_order",
+          "columns": [
+            {
+              "expression": "test_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sets_test_id_tests_id_fk": {
+          "name": "sets_test_id_tests_id_fk",
+          "tableFrom": "sets",
+          "tableTo": "tests",
+          "columnsFrom": [
+            "test_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sections": {
+      "name": "sections",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "set_id": {
+          "name": "set_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_sections_set": {
+          "name": "idx_sections_set",
+          "columns": [
+            {
+              "expression": "set_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "unique_section_order": {
+          "name": "unique_section_order",
+          "columns": [
+            {
+              "expression": "set_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sections_set_id_sets_id_fk": {
+          "name": "sections_set_id_sets_id_fk",
+          "tableFrom": "sections",
+          "tableTo": "sets",
+          "columnsFrom": [
+            "set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
