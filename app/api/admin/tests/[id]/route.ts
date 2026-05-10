@@ -95,7 +95,7 @@ export async function GET(
           with: {
             sections: true,
           },
-          orderBy: [asc(sets.order)],
+          orderBy: (s, { asc }) => [asc(s.order)],
         },
       },
     });

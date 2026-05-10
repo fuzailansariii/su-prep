@@ -1,5 +1,5 @@
 import { db } from "@/src/db";
-import { attempts, options, questions, tests } from "@/src/db/schema";
+import { attempts, options, questions, tests, sets } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
@@ -29,18 +29,22 @@ export async function GET(
       return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
     }
 
-    // Fetch the test for duration
+    // Fetch the test and set for metadata and duration
     const test = await db.query.tests.findFirst({
       where: and(eq(tests.id, attempt.testId), isNull(tests.deletedAt)),
     });
 
-    if (!test) {
-      return NextResponse.json({ error: "Test not found" }, { status: 404 });
+    const set = await db.query.sets.findFirst({
+      where: eq(sets.id, attempt.setId),
+    });
+
+    if (!test || !set) {
+      return NextResponse.json({ error: "Test or Set not found" }, { status: 404 });
     }
 
     // Fetch questions — strip isCorrect & explanation
     const testQuestions = await db.query.questions.findMany({
-      where: eq(questions.testId, attempt.testId),
+      where: eq(questions.setId, attempt.setId),
       orderBy: asc(questions.order),
       with: {
         options: {
@@ -58,12 +62,12 @@ export async function GET(
         type: true,
         marks: true,
         order: true,
-        section: true,
+        sectionId: true,
       },
     });
 
     // Calculate remaining seconds
-    const timeLimitSeconds = test.duration * 60;
+    const timeLimitSeconds = set.duration * 60;
     const elapsedSeconds = Math.floor(
       (Date.now() - attempt.startedAt.getTime()) / 1000,
     );
@@ -74,6 +78,7 @@ export async function GET(
       timeLimitSeconds,
       questions: testQuestions,
       testTitle: test.title,
+      setTitle: set.title,
     });
   } catch (error) {
     console.error("[attempt/GET]", error);

@@ -3,9 +3,10 @@ import { questions, sections, sets } from "@/src/db/schema";
 import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle2, BookOpen, ChevronDown } from "lucide-react";
+import { ChevronLeft, CheckCircle2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Container from "@/components/container";
+import QuestionActions from "@/components/admin/tests/question-actions";
 
 const TYPE_LABELS: Record<string, string> = {
   mcq: "MCQ",
@@ -51,7 +52,6 @@ export default async function SectionQuestionsPage({
 
   return (
     <Container className="py-8 md:py-10 px-0 max-w-4xl mx-auto flex flex-col gap-5">
-
       {/* Top nav */}
       <div className="flex items-center justify-between gap-3">
         <Button
@@ -68,7 +68,9 @@ export default async function SectionQuestionsPage({
       {/* Header card */}
       <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5">
         <p className="text-xs text-slate-400 font-sans mb-1">{set.title}</p>
-        <h1 className="text-xl font-heading font-bold text-slate-900">{section.name}</h1>
+        <h1 className="text-xl font-heading font-bold text-slate-900">
+          {section.name}
+        </h1>
         <p className="text-sm text-slate-500 font-sans mt-1">
           {allQuestions.length} question{allQuestions.length !== 1 ? "s" : ""}
         </p>
@@ -81,7 +83,12 @@ export default async function SectionQuestionsPage({
           <p className="text-sm text-slate-400 font-sans">
             No questions yet. Import from the set detail page.
           </p>
-          <Button asChild size="sm" variant="outline" className="rounded-xl font-heading font-bold">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="rounded-xl font-heading font-bold"
+          >
             <Link href={`/admin/tests/${testId}/sets/${setId}`}>
               <ChevronLeft size={13} className="mr-1" /> Back to Set
             </Link>
@@ -95,31 +102,36 @@ export default async function SectionQuestionsPage({
               className="bg-white border border-slate-200 rounded-2xl overflow-hidden"
             >
               {/* Question header */}
-              <div className="flex items-start gap-3 px-5 py-4">
-                <span className="shrink-0 mt-0.5 text-xs font-heading font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                  Q{i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span
-                      className={`text-[10px] font-heading font-bold uppercase px-1.5 py-0.5 rounded ${
-                        q.type === "mcq"
-                          ? "bg-blue-50 text-blue-600"
-                          : q.type === "multi"
-                            ? "bg-purple-50 text-purple-600"
-                            : "bg-amber-50 text-amber-600"
-                      }`}
-                    >
-                      {TYPE_LABELS[q.type]}
-                    </span>
-                    <span className="text-[10px] font-heading font-bold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">
-                      {q.marks} {q.marks === 1 ? "mark" : "marks"}
-                    </span>
+              <div className="flex justify-between gap-3 px-5 py-4">
+                <div className="flex items-start gap-3 max-w-[80%]">
+                  <span className="shrink-0 mt-0.5 text-xs font-heading font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                    Q{i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span
+                        className={`text-[10px] font-heading font-bold uppercase px-1.5 py-0.5 rounded ${
+                          q.type === "mcq"
+                            ? "bg-blue-50 text-blue-600"
+                            : q.type === "multi"
+                              ? "bg-purple-50 text-purple-600"
+                              : "bg-amber-50 text-amber-600"
+                        }`}
+                      >
+                        {TYPE_LABELS[q.type]}
+                      </span>
+                      <span className="text-[10px] font-heading font-bold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">
+                        {q.marks} {q.marks === 1 ? "mark" : "marks"}
+                      </span>
+                    </div>
+                    <p className="text-sm font-sans text-slate-800 leading-relaxed">
+                      {q.questionText}
+                    </p>
                   </div>
-                  <p className="text-sm font-sans text-slate-800 leading-relaxed">
-                    {q.questionText}
-                  </p>
                 </div>
+
+                {/* Action buttons */}
+                <QuestionActions questionId={q.id} />
               </div>
 
               {/* Options */}

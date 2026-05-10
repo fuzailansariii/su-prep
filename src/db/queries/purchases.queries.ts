@@ -50,7 +50,6 @@ export async function getUserPurchases(clerkUserId: string) {
           id: true,
           title: true,
           thumbnail: true,
-          duration: true,
           totalQuestions: true,
         },
       },

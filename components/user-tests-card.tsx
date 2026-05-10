@@ -1,4 +1,4 @@
-import { BarChart3, Clock, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
@@ -58,10 +58,6 @@ export default function TestCard({ test }: TestCardProps) {
           </p>
 
           <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-3 font-medium font-body">
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.duration} Mins</span>
-            </div>
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4 text-brand-primary/70" />
               <span>{test.totalQuestions} Questions</span>

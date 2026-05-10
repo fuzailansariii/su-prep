@@ -126,14 +126,14 @@ export default function CheckoutClient({ test }: CheckoutClientProps) {
           </h2>
 
           <div className="flex gap-4 items-center">
-            <div className="relative w-24 h-24 bg-slate-100 rounded-xl overflow-hidden shrink-0">
+            <div className="relative w-24 h-full bg-slate-100 rounded-xl overflow-hidden shrink-0">
               {test.thumbnail ? (
                 <Image
                   urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
                   src={test.thumbnail}
                   alt={test.title}
-                  width={80}
-                  height={80}
+                  width={100}
+                  height={100}
                   className="object-cover"
                 />
               ) : (

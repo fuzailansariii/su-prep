@@ -18,6 +18,12 @@ export async function getResultByAttemptId(attemptId: string) {
           id: true,
           title: true,
           totalQuestions: true,
+        },
+      },
+      set: {
+        columns: {
+          id: true,
+          title: true,
           totalMarks: true,
           negativeMarking: true,
         },
@@ -50,9 +56,9 @@ export async function getUserResults(clerkUserId: string) {
 }
 
 // Leaderboard with score details embedded
-export async function getLeaderboardForTest(testId: string) {
+export async function getLeaderboardForSet(setId: string) {
   return db.query.leaderboard.findMany({
-    where: eq(leaderboard.testId, testId),
+    where: eq(leaderboard.setId, setId),
     orderBy: leaderboard.rank,
     with: {
       result: {
@@ -72,7 +78,7 @@ export async function upsertLeaderboardEntry(data: NewLeaderboard) {
     .insert(leaderboard)
     .values(data)
     .onConflictDoUpdate({
-      target: [leaderboard.testId, leaderboard.clerkUserId],
+      target: [leaderboard.setId, leaderboard.clerkUserId],
       set: {
         rank: data.rank,
         resultId: data.resultId,

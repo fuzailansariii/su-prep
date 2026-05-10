@@ -6,6 +6,7 @@ import {
   questions,
   results,
   tests,
+  sets,
 } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
 import { recalculateLeaderboard } from "@/src/lib/leaderboard";
@@ -53,18 +54,18 @@ export async function POST(
     const body: SubmitBody = await req.json();
     const submittedAnswers = body.answers ?? [];
 
-    // 3. Fetch test (for marks config)
-    const test = await db.query.tests.findFirst({
-      where: eq(tests.id, attempt.testId),
+    // 3. Fetch set (for marks config)
+    const set = await db.query.sets.findFirst({
+      where: eq(sets.id, attempt.setId),
     });
 
-    if (!test) {
-      return NextResponse.json({ error: "Test not found" }, { status: 404 });
+    if (!set) {
+      return NextResponse.json({ error: "Set not found" }, { status: 404 });
     }
 
-    // 4. Fetch all questions for this test (with full options including isCorrect)
+    // 4. Fetch all questions for this set (with full options including isCorrect)
     const testQuestions = await db.query.questions.findMany({
-      where: eq(questions.testId, attempt.testId),
+      where: eq(questions.setId, attempt.setId),
       with: {
         options: {
           columns: { id: true, isCorrect: true },
@@ -121,9 +122,9 @@ export async function POST(
           marksAwarded = question.marks;
         } else {
           wrongCount++;
-          if (test.negativeMarking) {
+          if (set.negativeMarking) {
             marksAwarded = -Math.round(
-              question.marks * ((test.negativeMarkFraction ?? 25) / 100),
+              question.marks * ((set.negativeMarkFraction ?? 25) / 100),
             );
           } else {
             marksAwarded = 0;
@@ -149,7 +150,7 @@ export async function POST(
     const timeTaken = Math.floor(
       (Date.now() - attempt.startedAt.getTime()) / 1000,
     );
-    const percentage = Math.round((finalScoredMarks / test.totalMarks) * 100);
+    const percentage = Math.round((finalScoredMarks / set.totalMarks) * 100);
 
     // 6. Write everything atomically inside a transaction
     const resultId = nanoid();
@@ -188,8 +189,9 @@ export async function POST(
         id: resultId,
         clerkUserId: userId,
         testId: attempt.testId,
-        attemptId,
-        totalMarks: test.totalMarks,
+        setId: attempt.setId,
+        attemptId: attemptId,
+        totalMarks: set.totalMarks,
         scoredMarks: finalScoredMarks,
         correctAnswers: correctCount,
         wrongAnswers: wrongCount,
@@ -201,7 +203,7 @@ export async function POST(
     });
 
     // Recalculate all ranks and get the current user's rank
-    const rank = await recalculateLeaderboard(attempt.testId, userId);
+    const rank = await recalculateLeaderboard(attempt.setId, userId);
 
     return NextResponse.json({ resultId, rank });
   } catch (error) {
