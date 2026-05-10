@@ -4,31 +4,29 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
-import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
-  Clock,
-  BookOpen,
-  CheckCircle2,
   AlertCircle,
-  FileText,
   Pencil,
   Image as ImageIcon,
   Loader2,
-  Calendar,
-  BarChart,
-  Target,
-  Hash,
   Star,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Test } from "@/src/db/schema/tests";
+import type { Set as TestSet } from "@/src/db/schema/sets";
 import { Image } from "@imagekit/next";
 import { formatPrice } from "@/utils/format-price";
 import Container from "@/components/container";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { StatCard } from "@/components/ui/stat-card";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
+import { TestSetsList } from "@/components/admin/test-sets-list";
+import { MiniStat } from "@/components/ui/mini-stat";
+
+type TestWithSets = Test & {
+  sets: TestSet[];
+};
 
 export default function AdminTestViewPage({
   params,
@@ -38,7 +36,7 @@ export default function AdminTestViewPage({
   const router = useRouter();
   const { id: testId } = use(params);
 
-  const [test, setTest] = useState<Test | null>(null);
+  const [test, setTest] = useState<TestWithSets | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,59 +89,42 @@ export default function AdminTestViewPage({
   }
 
   const priceDisplay = test.price === 0 ? "Free" : formatPrice(test.price);
-  const avgMarks = (test.totalMarks / test.totalQuestions).toFixed(1);
+  const testSets = test.sets ?? [];
+  const totalSets = testSets.length;
 
-  const stats = [
-    { icon: BookOpen, label: "Questions", value: test.totalQuestions },
-    { icon: Clock, label: "Duration", value: `${test.duration} min` },
-    { icon: CheckCircle2, label: "Total marks", value: test.totalMarks },
-    { icon: Target, label: "Avg per Q", value: avgMarks },
-  ];
   return (
     <Container className="py-8 md:py-10 px-0 max-w-4xl mx-auto flex flex-col gap-5">
-      {/* top nav */}
+      {/* Top nav */}
       <div className="flex items-center justify-between gap-3">
         <Button
-          variant={"ghost"}
+          variant="ghost"
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm font-heading font-bold text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-heading font-bold text-slate-500 hover:text-slate-900"
         >
           <ChevronLeft size={16} /> Back
         </Button>
-        <div className="flex items-center gap-2">
-          <Button
-            asChild
-            variant="outline"
-            className="h-9 rounded-xl font-heading font-bold text-sm border-slate-200 text-slate-700"
-          >
-            <Link href={`/admin/tests/${test.id}/questions`}>
-              <FileText className="w-3.5 h-3.5 mr-1.5" /> Questions
-            </Link>
-          </Button>
-          <Button
-            asChild
-            className="h-9 rounded-xl font-heading font-bold text-sm bg-brand-primary hover:bg-brand-primary/90 text-white"
-          >
-            <Link href={`/admin/tests/${test.id}/edit`}>
-              <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit Test
-            </Link>
-          </Button>
-        </div>
+        <Button
+          asChild
+          className="h-9 rounded-xl font-heading font-bold text-sm bg-brand-primary hover:bg-brand-primary/90 text-white"
+        >
+          <Link href={`/admin/tests/${test.id}/edit`}>
+            <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit Test
+          </Link>
+        </Button>
       </div>
 
-      {/* main card */}
+      {/* Main info card — sidebar thumbnail + content */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        {/* thumbnail + title */}
         <div className="flex flex-col sm:flex-row">
-          {/* thumbnail */}
-          <div className="sm:w-52 h-40 sm:h-auto bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-100 flex items-center justify-center shrink-0">
+          {/* Thumbnail — fixed sidebar, always 16:9 on mobile, fixed width on desktop */}
+          <div className="w-full sm:w-68 sm:shrink-0 aspect-video sm:aspect-auto bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-100 overflow-hidden flex items-center justify-center">
             {test.thumbnail ? (
               <Image
-                urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
+                urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!}
                 src={test.thumbnail}
                 alt={test.title}
-                width={400}
-                height={300}
+                width={1280}
+                height={720}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -154,142 +135,78 @@ export default function AdminTestViewPage({
             )}
           </div>
 
-          {/* title block */}
-          <div className="flex-1 p-6 md:p-8">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <StatusBadge status={test.status} />
-              <DifficultyBadge
-                difficulty={test.difficulty}
-                className="text-xs px-2.5 py-1"
-              />
-              {test.isFeatured && (
-                <span className="inline-flex items-center gap-1 text-xs font-heading font-bold bg-brand-primary/8 text-brand-primary border border-brand-primary/15 px-2.5 py-1 rounded-lg">
-                  <Star size={10} className="fill-current" /> Featured
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 leading-tight mb-3">
-              {test.title}
-            </h1>
-
-            <p className="text-sm font-sans text-slate-500 leading-relaxed line-clamp-2 mb-5">
-              {test.description || "No description provided."}
-            </p>
-
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-heading font-black text-brand-primary">
-                {priceDisplay}
-              </span>
-              {test.originalPrice && test.originalPrice > test.price && (
-                <span className="text-base font-sans text-slate-400 line-through">
-                  {formatPrice(test.originalPrice)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* divider */}
-        <div className="h-px bg-slate-100" />
-
-        {/* stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x border-t divide-y md:divide-y-0 divide-slate-100 bg-slate-50/50">
-          {stats.map((s) => (
-            <StatCard
-              key={s.label}
-              icon={s.icon}
-              label={s.label}
-              value={s.value}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* bottom two cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* marking scheme */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <BarChart size={16} className="text-brand-primary" />
-            <h3 className="text-sm font-heading font-bold text-slate-900">
-              Marking scheme
-            </h3>
-          </div>
-          <div className="divide-y divide-slate-100">
-            <Row
-              label="Negative marking"
-              value={
-                <span
-                  className={cn(
-                    "text-xs font-heading font-bold px-2 py-0.5 rounded-md",
-                    test.negativeMarking
-                      ? "bg-red-50 text-red-600"
-                      : "bg-slate-100 text-slate-500",
+          {/* Content */}
+          <div className="flex-1 flex flex-col justify-between p-5 md:p-6 gap-4">
+            {/* Badges */}
+            <div>
+              <div className="flex flex-col md:flex-row justify-start md:justify-between md:gap-0 gap-1.5 mb-3">
+                <div className="flex flex-wrap items-center gap-2 ">
+                  <StatusBadge status={test.status} />
+                  <DifficultyBadge
+                    difficulty={test.difficulty}
+                    className="text-xs px-2.5 py-1"
+                  />
+                  {test.isFeatured && (
+                    <span className="inline-flex items-center gap-1 text-xs font-heading font-bold bg-brand-primary/8 text-brand-primary border border-brand-primary/15 px-2.5 py-1 rounded-lg">
+                      <Star size={10} className="fill-current" /> Featured
+                    </span>
                   )}
-                >
-                  {test.negativeMarking ? "Enabled" : "Disabled"}
-                </span>
-              }
-            />
-            {test.negativeMarking && (
-              <Row
-                label="Penalty per wrong answer"
-                value={`-${(test.negativeMarkFraction ?? 25) / 100}`}
-              />
-            )}
-            <Row label="Marks per question (avg)" value={avgMarks} />
-            <Row label="Pass requires" value="—" />
-          </div>
-        </div>
+                </div>
 
-        {/* audit info */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <Calendar size={16} className="text-brand-primary" />
-            <h3 className="text-sm font-heading font-bold text-slate-900">
-              Audit info
-            </h3>
-          </div>
-          <div className="divide-y divide-slate-100">
-            <div className="py-3">
-              <p className="text-xs font-heading font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                Test ID
+                <span className="text-xs text-slate-400 font-sans flex items-center gap-1">
+                  <Calendar size={11} />
+                  {new Date(test.updatedAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+
+              {/* Title + description */}
+              <h1 className="text-xl md:text-2xl font-heading font-bold text-slate-900 leading-tight mb-1.5">
+                {test.title}
+              </h1>
+              <p className="text-sm font-sans text-slate-500 leading-relaxed line-clamp-2">
+                {test.description || "No description provided."}
               </p>
-              <code className="text-xs font-mono text-slate-700 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
-                {test.id}
-              </code>
             </div>
-            <Row
-              label="Created"
-              value={new Date(test.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            />
-            <Row
-              label="Last updated"
-              value={new Date(test.updatedAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            />
+
+            {/* Price + stats */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-heading font-black text-brand-primary">
+                  {priceDisplay}
+                </span>
+                {test.originalPrice && test.originalPrice > test.price && (
+                  <span className="text-sm font-sans text-slate-400 line-through">
+                    {formatPrice(test.originalPrice)}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-5">
+                <MiniStat label="Questions" value={test.totalQuestions} />
+                <div className="w-px h-8 bg-slate-100" />
+                <MiniStat label="Sets" value={totalSets} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </Container>
-  );
-}
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <span className="text-sm font-sans text-slate-500">{label}</span>
-      <span className="text-sm font-heading font-bold text-slate-800">
-        {value}
-      </span>
-    </div>
+      {/* Sets list */}
+      <TestSetsList
+        testId={test.id}
+        initialSets={testSets}
+        onDelete={(setId) =>
+          setTest((prev) =>
+            prev
+              ? { ...prev, sets: prev.sets.filter((s) => s.id !== setId) }
+              : prev,
+          )
+        }
+      />
+    </Container>
   );
 }

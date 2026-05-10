@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { options, questions, tests } from "./schema";
+import { options, questions, tests, sets, sections } from "./schema";
 import { db } from "./index";
 
 async function seed() {
@@ -10,31 +10,57 @@ async function seed() {
     id: testId,
     title: "Shipping Mock Test 1",
     description: "Sample test for practice",
-    duration: 1800,
-    totalMarks: 100,
     totalQuestions: 5,
     price: 0,
+    status: "published",
     createdAt: new Date(),
   });
 
   console.log("✅ Test created");
 
-  // 2️⃣ Create 5 Questions
+  // 2️⃣ Create Set
+  const setId = nanoid();
+  await db.insert(sets).values({
+    id: setId,
+    testId,
+    title: "Set 1",
+    duration: 30, // 30 mins
+    totalQuestions: 5,
+    totalMarks: 20,
+    order: 1,
+    status: "published",
+  });
+
+  console.log("✅ Set created");
+
+  // 3️⃣ Create Section
+  const sectionId = nanoid();
+  await db.insert(sections).values({
+    id: sectionId,
+    setId,
+    name: "General Knowledge",
+    order: 1,
+  });
+
+  console.log("✅ Section created");
+
+  // 4️⃣ Create 5 Questions
   for (let i = 1; i <= 5; i++) {
     const questionId = nanoid();
 
     await db.insert(questions).values({
       id: questionId,
-      testId,
+      setId,
+      sectionId,
       questionText: `Sample Question ${i}?`,
-      marks: 20,
+      marks: 4,
       order: i,
       createdAt: new Date(),
     });
 
-    // 3️⃣ Create Options (4 per question)
+    // 5️⃣ Create Options (4 per question)
     const optionData = [
-      { text: "Option A", isCorrect: i === 1 }, // first question correct A
+      { text: "Option A", isCorrect: i === 1 },
       { text: "Option B", isCorrect: i === 2 },
       { text: "Option C", isCorrect: i === 3 },
       { text: "Option D", isCorrect: i === 4 },

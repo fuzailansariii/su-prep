@@ -1,0 +1,1 @@
+ALTER TABLE "tests" ALTER COLUMN "total_questions" SET DEFAULT 0;

@@ -1,9 +1,9 @@
 import { db } from "@/src/db";
-import { tests } from "@/src/db/schema";
+import { sets, tests } from "@/src/db/schema";
 import { isAdmin } from "@/src/lib/auth-helper";
 import { adminUpdateTestSchema } from "@/src/lib/validations/test.validations";
 import { toPaise } from "@/utils/format-price";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
@@ -50,7 +50,7 @@ export async function PATCH(
     const updatedTest = await db
       .update(tests)
       .set(updateData)
-      .where(eq(tests.id, id))
+      .where(and(eq(tests.id, id), isNull(tests.deletedAt)))
       .returning();
 
     if (updatedTest.length === 0) {
@@ -89,7 +89,15 @@ export async function GET(
   try {
     const { id } = await params;
     const test = await db.query.tests.findFirst({
-      where: eq(tests.id, id),
+      where: and(eq(tests.id, id), isNull(tests.deletedAt)),
+      with: {
+        sets: {
+          with: {
+            sections: true,
+          },
+          orderBy: (s, { asc }) => [asc(s.order)],
+        },
+      },
     });
 
     if (!test) {
@@ -123,7 +131,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    
+
     // Soft delete the test
     const deletedTest = await db
       .update(tests)

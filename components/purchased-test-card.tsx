@@ -124,10 +124,6 @@ export default function PurchasedTestCard({
 
           <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-4 font-medium font-body">
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.duration} Mins</span>
-            </div>
-            <div className="flex items-center gap-1">
               <FileText className="w-4 h-4 text-brand-primary/70" />
               <span>{test.totalQuestions} Questions</span>
             </div>

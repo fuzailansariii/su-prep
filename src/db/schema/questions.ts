@@ -9,6 +9,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { tests } from "./tests";
+import { sets } from "./sets";
+import { sections } from "./sections";
 
 export const questionTypeEnum = pgEnum("question_type", [
   "mcq", // single correct
@@ -20,15 +22,17 @@ export const questions = pgTable(
   "questions",
   {
     id: text("id").primaryKey(),
-    testId: text("test_id")
+    setId: text("set_id")
       .notNull()
-      .references(() => tests.id, { onDelete: "cascade" }),
+      .references(() => sets.id, { onDelete: "cascade" }),
     questionText: text("question_text").notNull(),
     type: questionTypeEnum("type").default("mcq").notNull(),
     explanation: text("explanation"), // shown after attempt
     marks: integer("marks").notNull().default(1),
     order: integer("order").notNull(), // question number in test
-    section: text("section"),
+    sectionId: text("section_id").references(() => sections.id, {
+      onDelete: "cascade",
+    }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -36,8 +40,8 @@ export const questions = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    uniqueIndex("unique_question_order").on(table.testId, table.order),
-    index("idx_question_test").on(table.testId),
+    uniqueIndex("unique_question_order").on(table.setId, table.order),
+    index("idx_question_set").on(table.setId),
   ],
 );
 

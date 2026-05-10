@@ -24,15 +24,10 @@ export default function EditTestClient({ test }: { test: Test }) {
     title: test.title,
     description: test.description,
     thumbnail: test.thumbnail,
-    duration: test.duration,
-    totalQuestions: test.totalQuestions,
-    totalMarks: test.totalMarks,
     price: test.price / 100,
     originalPrice: test.originalPrice ? test.originalPrice / 100 : undefined,
     difficulty: test.difficulty,
     isFeatured: test.isFeatured,
-    negativeMarking: test.negativeMarking,
-    negativeMarkFraction: test.negativeMarkFraction ?? 25,
     status: test.status,
   });
 
@@ -145,38 +140,6 @@ export default function EditTestClient({ test }: { test: Test }) {
             Test Configuration
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field label="Duration (mins) *" error={errors.duration}>
-              <Input
-                type="number"
-                min={1}
-                max={600}
-                value={form.duration ?? ""}
-                onChange={(e) => set("duration", Number(e.target.value))}
-                className={errors.duration ? "border-red-400" : ""}
-              />
-            </Field>
-            <Field label="Total Questions *" error={errors.totalQuestions}>
-              <Input
-                type="number"
-                min={1}
-                max={500}
-                value={form.totalQuestions ?? ""}
-                onChange={(e) => set("totalQuestions", Number(e.target.value))}
-                className={errors.totalQuestions ? "border-red-400" : ""}
-              />
-            </Field>
-          </div>
-
-          <Field label="Total Marks *" error={errors.totalMarks}>
-            <Input
-              type="number"
-              min={1}
-              value={form.totalMarks ?? ""}
-              onChange={(e) => set("totalMarks", Number(e.target.value))}
-              className={errors.totalMarks ? "border-red-400" : ""}
-            />
-          </Field>
 
           <Field label="Difficulty" error={errors.difficulty}>
             <div className="flex gap-3">
@@ -201,55 +164,11 @@ export default function EditTestClient({ test }: { test: Test }) {
               ))}
             </div>
           </Field>
-
-          <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4">
-            <div>
-              <p className="text-sm font-semibold font-heading text-slate-700">
-                Negative Marking
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Deduct marks for wrong answers
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => set("negativeMarking", !form.negativeMarking)}
-              className={cn(
-                "w-12 h-6 rounded-full transition-all relative",
-                form.negativeMarking ? "bg-brand-primary" : "bg-slate-300",
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all",
-                  form.negativeMarking ? "left-6" : "left-0.5",
-                )}
-              />
-            </button>
-          </div>
-
-          {form.negativeMarking && (
-            <Field
-              label="Negative Mark Fraction"
-              error={errors.negativeMarkFraction}
-              hint="Enter 25 for -0.25"
-            >
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={form.negativeMarkFraction ?? 25}
-                onChange={(e) =>
-                  set("negativeMarkFraction", Number(e.target.value))
-                }
-              />
-            </Field>
-          )}
         </div>
 
         <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
           <h2 className="text-lg font-heading font-bold text-slate-800 border-b border-slate-100 pb-2">
-            Pricing & Visibility
+            Pricing &amp; Visibility
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

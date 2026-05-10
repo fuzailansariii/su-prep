@@ -19,36 +19,7 @@ const adminTestBaseSchema = z.object({
     .max(LIMITS.title.max, "Title is too long"),
 
   description: z.string().max(LIMITS.description.max).nullable().optional(),
-
   thumbnail: z.url("Must be a valid URL").nullable().optional(),
-
-  duration: z
-    .number({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Duration is required"
-          : "Duration must be a number",
-    })
-    .int("Duration must be a whole number")
-    .min(LIMITS.duration.min, "Duration must be at least 1 minute")
-    .max(LIMITS.duration.max, "Duration cannot exceed 600 minutes"),
-
-  totalQuestions: z
-    .number({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Total Question is required"
-          : "Must be a number",
-    })
-    .int()
-    .min(LIMITS.questions.min, "Must have at least 1 question")
-    .max(LIMITS.questions.max, "Cannot exceed 500 questions"),
-
-  totalMarks: z
-    .number({ error: "Must be a number" })
-    .int()
-    .min(1, "Total marks must be at least 1"),
-
   price: z
     .number({
       error: (issue) =>
@@ -59,7 +30,6 @@ const adminTestBaseSchema = z.object({
     .int("Price must be in paise — no decimals")
     .min(0, "Price cannot be negative")
     .max(LIMITS.price.max, "Price is too high"),
-
   originalPrice: z
     .number({ error: "Must be a number" })
     .int()
@@ -67,24 +37,8 @@ const adminTestBaseSchema = z.object({
     .max(LIMITS.price.max)
     .nullable()
     .optional(),
-
   difficulty: Difficulty.default("medium"),
-
   isFeatured: z.boolean().default(false),
-
-  negativeMarking: z.boolean().default(false),
-
-  negativeMarkFraction: z
-    .number({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Negative Marks is required"
-          : "Must be a number",
-    })
-    .int("Must be a whole number")
-    .min(0)
-    .max(100)
-    .default(25),
 });
 
 // Create — no id (generated server-side), no status (always "draft" on create)

@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { tests } from "./tests";
 import { options, questions } from "./questions";
+import { sets } from "./sets";
 
 export const attemptStatusEnum = pgEnum("attempt_status", [
   "in_progress",
@@ -26,6 +27,10 @@ export const attempts = pgTable(
     testId: text("test_id")
       .notNull()
       .references(() => tests.id, { onDelete: "restrict" }),
+    setId: text("set_id")
+      .notNull()
+      .references(() => sets.id, { onDelete: "restrict" }),
+    pausedAt: timestamp("paused_at"),
     status: attemptStatusEnum("status").default("in_progress").notNull(),
     startedAt: timestamp("started_at").defaultNow().notNull(),
     submittedAt: timestamp("submitted_at"),
@@ -50,6 +55,7 @@ export const attemptAnswers = pgTable(
       .references(() => questions.id, { onDelete: "restrict" }),
     selectedOptionIds: text("selected_option_ids").array(),
     isCorrect: boolean("is_correct").default(false).notNull(),
+    isMarkedForReview: boolean("is_marked_for_review").default(false).notNull(),
     marksAwarded: integer("marks_awarded").notNull().default(0),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

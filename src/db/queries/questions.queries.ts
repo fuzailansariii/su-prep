@@ -3,9 +3,9 @@ import { db } from "../index";
 import { questions, options } from "../schema";
 import type { NewOption, NewQuestion } from "../schema";
 
-export async function getQuestionsForAttempt(testId: string) {
+export async function getQuestionsForAttempt(setId: string) {
   return db.query.questions.findMany({
-    where: eq(questions.testId, testId),
+    where: eq(questions.setId, setId),
     orderBy: questions.order,
     columns: {
       id: true,
@@ -31,9 +31,9 @@ export async function getQuestionsForAttempt(testId: string) {
 
 // For admin — isCorrect is INCLUDED, no columns filter
 
-export async function getQuestionsForAdmin(testId: string) {
+export async function getQuestionsForAdmin(setId: string) {
   return db.query.questions.findMany({
-    where: eq(questions.testId, testId),
+    where: eq(questions.setId, setId),
     orderBy: questions.order,
     with: {
       options: {
@@ -44,9 +44,9 @@ export async function getQuestionsForAdmin(testId: string) {
 }
 
 // For scoring during submit — needs isCorrect to calculate marks
-export async function getQuestionsWithOptionsForScoring(testId: string) {
+export async function getQuestionsWithOptionsForScoring(setId: string) {
   return db.query.questions.findMany({
-    where: eq(questions.testId, testId),
+    where: eq(questions.setId, setId),
     with: {
       options: true,
     },

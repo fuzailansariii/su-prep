@@ -4,23 +4,50 @@ import { questions, options } from "./questions";
 import { purchases } from "./purchases";
 import { attempts, attemptAnswers } from "./attempts";
 import { results, leaderboard } from "./results";
+import { sets } from "./sets";
+import { sections } from "./sections";
 
 // ── TESTS ──
-// A test has many questions, many purchases, many attempts, many results, many leaderboard entries
+// A test has many purchases and many sets
 export const testsRelations = relations(tests, ({ many }) => ({
-  questions: many(questions),
-  leaderboard: many(leaderboard),
-  results: many(results),
   purchases: many(purchases),
+  sets: many(sets),
+}));
+
+// ── SETS ──
+// A set belongs to ONE test, and has MANY questions, and has MANY sections
+export const setsRelations = relations(sets, ({ one, many }) => ({
+  test: one(tests, {
+    fields: [sets.testId],
+    references: [tests.id],
+  }),
+  questions: many(questions),
+  sections: many(sections),
   attempts: many(attempts),
+  results: many(results),
+  leaderboard: many(leaderboard),
+}));
+
+// ── SECTIONS ──
+// A section belongs to ONE set, and has MANY questions
+export const sectionsRelations = relations(sections, ({ one, many }) => ({
+  set: one(sets, {
+    fields: [sections.setId],
+    references: [sets.id],
+  }),
+  questions: many(questions),
 }));
 
 // ── QUESTIONS ──
-// A question belongs to ONE test, and has MANY options, and has MANY attemptAnswers
+// A question belongs to ONE set, and has MANY options, and has MANY attemptAnswers
 export const questionsRelations = relations(questions, ({ one, many }) => ({
-  test: one(tests, {
-    fields: [questions.testId],
-    references: [tests.id],
+  set: one(sets, {
+    fields: [questions.setId],
+    references: [sets.id],
+  }),
+  section: one(sections, {
+    fields: [questions.sectionId],
+    references: [sections.id],
   }),
   options: many(options),
   attemptAnswers: many(attemptAnswers),
@@ -29,7 +56,7 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
 // ── OPTIONS ──
 // An option belongs to ONE question
 export const optionsRelations = relations(options, ({ one }) => ({
-  questions: one(questions, {
+  question: one(questions, {
     fields: [options.questionId],
     references: [questions.id],
   }),
@@ -50,6 +77,10 @@ export const attemptsRelations = relations(attempts, ({ one, many }) => ({
   test: one(tests, {
     fields: [attempts.testId],
     references: [tests.id],
+  }),
+  set: one(sets, {
+    fields: [attempts.setId],
+    references: [sets.id],
   }),
   result: one(results, {
     fields: [attempts.id],
@@ -78,6 +109,10 @@ export const resultsRelations = relations(results, ({ one }) => ({
     fields: [results.testId],
     references: [tests.id],
   }),
+  set: one(sets, {
+    fields: [results.setId],
+    references: [sets.id],
+  }),
   attempt: one(attempts, {
     fields: [results.attemptId],
     references: [attempts.id],
@@ -91,9 +126,9 @@ export const resultsRelations = relations(results, ({ one }) => ({
 // ── LEADERBOARD ──
 // A leaderboard entry belongs to ONE test, belongs to ONE result
 export const leaderboardRelations = relations(leaderboard, ({ one }) => ({
-  test: one(tests, {
-    fields: [leaderboard.testId],
-    references: [tests.id],
+  set: one(sets, {
+    fields: [leaderboard.setId],
+    references: [sets.id],
   }),
   result: one(results, {
     fields: [leaderboard.resultId],

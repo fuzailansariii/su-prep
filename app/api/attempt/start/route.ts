@@ -4,6 +4,7 @@ import {
   options,
   purchases,
   questions,
+  sets,
   tests,
 } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
@@ -19,11 +20,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
 
-    // check for the testId
-    const { testId } = await req.json();
-    if (!testId) {
+    // check for the testId and setId
+    const { testId, setId } = await req.json();
+    if (!testId || !setId) {
       return NextResponse.json(
-        { error: "testId is required" },
+        { error: "testId and setId are required" },
         { status: 400 },
       );
     }
@@ -39,6 +40,15 @@ export async function POST(req: NextRequest) {
 
     if (!test) {
       return NextResponse.json({ error: "Test not found" }, { status: 404 });
+    }
+
+    // check if the set exists
+    const set = await db.query.sets.findFirst({
+      where: and(eq(sets.id, setId), eq(sets.status, "published")),
+    });
+
+    if (!set) {
+      return NextResponse.json({ error: "Set not found" }, { status: 404 });
     }
 
     // check if user has purchases the test
@@ -57,11 +67,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // check no completed attempt — one attempt only
+    // check no completed attempt for this set
     const completedAttempt = await db.query.attempts.findFirst({
       where: and(
         eq(attempts.clerkUserId, userId),
         eq(attempts.testId, testId),
+        eq(attempts.setId, setId),
         eq(attempts.status, "completed"),
       ),
     });
@@ -70,18 +81,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Already completed" }, { status: 409 });
     }
 
-    // check for in progress
+    // check for in progress for this set
     const inProgressAttempt = await db.query.attempts.findFirst({
       where: and(
         eq(attempts.clerkUserId, userId),
         eq(attempts.testId, testId),
+        eq(attempts.setId, setId),
         eq(attempts.status, "in_progress"),
       ),
     });
 
-    // fetch questions - No correct answer, No explanations
+    // fetch questions for this set
     const testQuestions = await db.query.questions.findMany({
-      where: eq(questions.testId, testId),
+      where: eq(questions.setId, setId),
       orderBy: asc(questions.order),
       with: {
         options: {
@@ -99,7 +111,7 @@ export async function POST(req: NextRequest) {
         type: true,
         marks: true,
         order: true,
-        section: true,
+        sectionId: true,
       },
     });
 
@@ -116,6 +128,7 @@ export async function POST(req: NextRequest) {
         id: attemptId,
         clerkUserId: userId,
         testId,
+        setId,
         status: "in_progress",
         startedAt: new Date(),
         createdAt: new Date(),
@@ -123,7 +136,7 @@ export async function POST(req: NextRequest) {
     }
 
     // calculate remaning time
-    const timeLimitSeconds = test.duration * 60;
+    const timeLimitSeconds = set.duration * 60;
     const startedAt = inProgressAttempt?.startedAt ?? new Date();
     const elapsedSecond = Math.floor((Date.now() - startedAt.getTime()) / 1000);
     const remainingSeconds = Math.max(0, timeLimitSeconds - elapsedSecond);

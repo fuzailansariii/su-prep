@@ -23,7 +23,7 @@ export function StatCard({
         className,
       )}
     >
-      <div className="flex items-center gap-3 p-5">
+      <div className="flex items-center gap-3 p-2">
         <div className="w-9 h-9 rounded-xl bg-white flex items-center border border-slate-200 justify-center shrink-0">
           <Icon size={18} className="text-slate-400" />
         </div>

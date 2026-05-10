@@ -16,8 +16,6 @@ export function TestDetailsStep({
 }) {
   const [form, setForm] = useState<Partial<AdminCreateInput>>({
     difficulty: "medium",
-    negativeMarking: false,
-    negativeMarkFraction: 25,
     isFeatured: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -29,7 +27,7 @@ export function TestDetailsStep({
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setApiError(null);
     setSubmitting(true);
@@ -75,7 +73,6 @@ export function TestDetailsStep({
       )}
 
       {/* Thumbnail */}
-
       <Field label="Thumbnail (Optional)" error={errors.thumbnail}>
         <UploadFile
           onUploadComplete={(url) => set("thumbnail", url)}
@@ -103,32 +100,6 @@ export function TestDetailsStep({
           className="flex w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-brand-primary focus-visible:ring-4 focus-visible:ring-brand-primary/20 transition-all resize-none disabled:opacity-50 font-heading"
         />
       </Field>
-
-      {/* Duration + Total Questions */}
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Duration (mins) *" error={errors.duration} hint="Max 600">
-          <Input
-            type="number"
-            placeholder="e.g. 120"
-            min={1}
-            max={600}
-            value={form.duration ?? ""}
-            onChange={(e) => set("duration", Number(e.target.value))}
-            className={errors.duration ? "border-red-400" : ""}
-          />
-        </Field>
-        <Field label="Total Questions *" error={errors.totalQuestions}>
-          <Input
-            type="number"
-            placeholder="e.g. 100"
-            min={1}
-            max={500}
-            value={form.totalQuestions ?? ""}
-            onChange={(e) => set("totalQuestions", Number(e.target.value))}
-            className={errors.totalQuestions ? "border-red-400" : ""}
-          />
-        </Field>
-      </div>
 
       {/* Pricing */}
       <div className="grid grid-cols-2 gap-4">
@@ -162,17 +133,6 @@ export function TestDetailsStep({
         </Field>
       </div>
 
-      <Field label="Total Marks *" error={errors.totalMarks}>
-        <Input
-          type="number"
-          placeholder="e.g. 100"
-          min={1}
-          value={form.totalMarks ?? ""}
-          onChange={(e) => set("totalMarks", Number(e.target.value))}
-          className={errors.totalMarks ? "border-red-400" : ""}
-        />
-      </Field>
-
       {/* Difficulty */}
       <Field label="Difficulty" error={errors.difficulty}>
         <div className="flex gap-2">
@@ -197,52 +157,6 @@ export function TestDetailsStep({
           ))}
         </div>
       </Field>
-
-      {/* Negative Marking */}
-      <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4">
-        <div>
-          <p className="text-sm font-semibold font-heading text-slate-700">
-            Negative Marking
-          </p>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Deduct marks for wrong answers
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => set("negativeMarking", !form.negativeMarking)}
-          className={cn(
-            "w-12 h-6 rounded-full transition-all relative",
-            form.negativeMarking ? "bg-brand-primary" : "bg-slate-300",
-          )}
-        >
-          <span
-            className={cn(
-              "absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all",
-              form.negativeMarking ? "left-6" : "left-0.5",
-            )}
-          />
-        </button>
-      </div>
-
-      {form.negativeMarking && (
-        <Field
-          label="Negative Mark Fraction"
-          error={errors.negativeMarkFraction}
-          hint="Enter 25 for -0.25, 33 for -0.33"
-        >
-          <Input
-            type="number"
-            placeholder="25"
-            min={0}
-            max={100}
-            value={form.negativeMarkFraction ?? 25}
-            onChange={(e) =>
-              set("negativeMarkFraction", Number(e.target.value))
-            }
-          />
-        </Field>
-      )}
 
       {/* Featured */}
       <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4">

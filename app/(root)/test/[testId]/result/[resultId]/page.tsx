@@ -59,16 +59,18 @@ export default async function ResultPage({ params }: ResultPageProps) {
         <div className="flex gap-3">
           <Button
             asChild
+            size={"lg"}
             variant="outline"
-            className="font-heading font-bold"
+            className="font-heading text-[13px] font-bold"
           >
-            <Link href={`/leaderboard/${testId}`}>View Leaderboard</Link>
+            <Link href={`/mock-tests`}>Mock Tests</Link>
           </Button>
           <Button
             asChild
-            className="bg-brand-primary hover:bg-brand-primary-hover font-heading font-bold"
+            size={"lg"}
+            className="bg-brand-primary text-[13px] hover:bg-brand-primary-hover font-heading font-bold"
           >
-            <Link href={`/dashboard`}>Dashboard</Link>
+            <Link href={`/leaderboard/${testId}`}>View Leaderboard</Link>
           </Button>
         </div>
       </div>
@@ -77,11 +79,15 @@ export default async function ResultPage({ params }: ResultPageProps) {
         {/* Rank Card */}
         <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col items-center justify-center gap-3 relative overflow-hidden">
           {result.leaderboard?.rank && result.leaderboard.rank <= 3 && (
-            <div className={`absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full pointer-events-none ${
-              result.leaderboard.rank === 1 ? "bg-yellow-500" :
-              result.leaderboard.rank === 2 ? "bg-slate-500" :
-              "bg-amber-600"
-            }`} />
+            <div
+              className={`absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full pointer-events-none ${
+                result.leaderboard.rank === 1
+                  ? "bg-yellow-500"
+                  : result.leaderboard.rank === 2
+                    ? "bg-slate-500"
+                    : "bg-amber-600"
+              }`}
+            />
           )}
           <div className="h-16 w-16 bg-brand-label rounded-full flex items-center justify-center">
             <Trophy className="h-8 w-8 text-brand-primary" />

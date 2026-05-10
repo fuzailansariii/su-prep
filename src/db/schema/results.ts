@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { tests } from "./tests";
 import { attempts } from "./attempts";
+import { sets } from "./sets";
 
 export const results = pgTable(
   "results",
@@ -18,6 +19,10 @@ export const results = pgTable(
     testId: text("test_id")
       .notNull()
       .references(() => tests.id, { onDelete: "restrict" }),
+    setId: text("set_id")
+      .notNull()
+      .references(() => sets.id, { onDelete: "restrict" }),
+    marksLost: integer("marks_lost").notNull().default(0),
     attemptId: text("attempt_id")
       .unique()
       .notNull()
@@ -38,9 +43,9 @@ export const leaderboard = pgTable(
   "leaderboard",
   {
     id: text("id").primaryKey(),
-    testId: text("test_id")
+    setId: text("set_id")
       .notNull()
-      .references(() => tests.id, { onDelete: "cascade" }),
+      .references(() => sets.id, { onDelete: "cascade" }),
     clerkUserId: text("clerk_user_id").notNull(),
     resultId: text("result_id")
       .notNull()
@@ -49,9 +54,9 @@ export const leaderboard = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
-    index("idx_leaderboard_test").on(table.testId),
+    index("idx_leaderboard_set").on(table.setId),
     index("idx_leaderboard_user").on(table.clerkUserId),
-    uniqueIndex("unique_leaderboard_user").on(table.testId, table.clerkUserId),
+    uniqueIndex("unique_leaderboard_user").on(table.setId, table.clerkUserId),
   ],
 );
 

@@ -107,17 +107,11 @@ export default function TestDetails({
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col items-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors rounded-2xl py-4 px-2 border border-slate-100">
-                <Clock size={20} className="text-brand-primary" />
-                <span className="text-[11px] font-bold text-brand-muted tracking-widest font-heading">
-                  {test.duration} MINS
-                </span>
-              </div>
-              <div className="flex flex-col items-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors rounded-2xl py-4 px-2 border border-slate-100">
+            <div className="flex justify-center">
+              <div className="flex flex-col items-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors rounded-2xl py-4 px-6 border border-slate-100 w-full">
                 <FileText size={20} className="text-brand-primary" />
                 <span className="text-[11px] font-bold text-brand-muted tracking-widest font-heading">
-                  {test.totalQuestions} QS
+                  {test.totalQuestions} QUESTIONS
                 </span>
               </div>
             </div>
