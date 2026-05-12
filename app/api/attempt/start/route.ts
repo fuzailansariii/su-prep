@@ -170,6 +170,8 @@ export async function POST(req: NextRequest) {
       attemptId,
       setId,
       testId,
+      setTitle: set.title,
+      testTitle: test.title,
       isResuming,
       remainingSeconds,
       questions: testQuestions,

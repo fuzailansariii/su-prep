@@ -44,6 +44,7 @@ export const attempts = pgTable(
   (table) => [
     index("idx_attempts_user").on(table.clerkUserId),
     index("idx_attempts_test").on(table.testId),
+    uniqueIndex("unique_active_attempt").on(table.clerkUserId, table.setId),
   ],
 );
 

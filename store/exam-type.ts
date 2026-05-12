@@ -1,4 +1,8 @@
-import type { Question, Section } from "@/src/db/schema";
+import type { Question, Section, Option } from "@/src/db/schema";
+
+export type QuestionWithContent = Question & {
+  options: Option[];
+};
 
 export type QuestionStatus =
   | "not_visited"
@@ -12,7 +16,9 @@ export type ExamInitData = {
   attemptId: string;
   setId: string;
   testId: string;
-  questions: Question[];
+  setTitle: string;
+  testTitle: string;
+  questions: QuestionWithContent[];
   sections: Section[];
   timeRemaining: number; // seconds
   savedAnswers?: Record<string, string[]>;
@@ -26,9 +32,11 @@ export type ExamStore = {
   setId: string | null;
   testId: string | null;
   status: "idle" | "in_progress" | "paused" | "submitted";
+  setTitle: string | null;
+  testTitle: string | null;
 
   // Content
-  questions: Question[];
+  questions: QuestionWithContent[];
   sections: Section[];
 
   // Navigation
