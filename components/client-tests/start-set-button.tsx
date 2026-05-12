@@ -38,9 +38,9 @@ export default function StartSetButton({ testId, setId }: Props) {
     <Button
       onClick={handleStart}
       disabled={loading}
-      className="w-full font-heading font-bold rounded-xl shadow-md shadow-brand-primary/20 bg-brand-primary hover:bg-brand-primary/90 text-white"
+      className="w-full h-10 text-lg font-heading font-bold rounded-xl shadow-md shadow-brand-primary/20 bg-brand-primary hover:bg-brand-primary/90 text-white"
     >
-      <PlayCircle className="w-4 h-4 mr-1.5" />
+      <PlayCircle className="size-4 mr-1.5" />
       <span>{loading ? "Starting..." : "Start Set"}</span>
     </Button>
   );

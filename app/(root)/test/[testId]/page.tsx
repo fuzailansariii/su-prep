@@ -192,7 +192,7 @@ export default async function TestInstruction({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-heading font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
-                          Set {set.order}
+                          # {set.order}
                         </span>
                         <h3 className="font-heading font-bold text-slate-900">
                           {set.title}

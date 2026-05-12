@@ -1,6 +1,6 @@
 import { db } from "@/src/db";
 import { results, leaderboard } from "@/src/db/schema";
-import { eq, asc, and, or, gt, lt, sql } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 export async function recalculateLeaderboard(
@@ -41,7 +41,7 @@ export async function recalculateLeaderboard(
         curr.percentage === prev.percentage &&
         curr.timeTaken === prev.timeTaken;
 
-      if (!isTied) currentRank = i + 1; // dense ranking
+      if (!isTied) currentRank++;
     }
 
     rankEntries.push({

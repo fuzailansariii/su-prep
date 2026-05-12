@@ -1,13 +1,16 @@
 import { db } from "@/src/db";
 import {
+  attemptAnswers,
   attempts,
   options,
   purchases,
   questions,
+  sections,
   sets,
   tests,
 } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
+import { startAttemptSchema } from "@/src/lib/validations/attempts";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
@@ -20,14 +23,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
 
-    // check for the testId and setId
-    const { testId, setId } = await req.json();
-    if (!testId || !setId) {
-      return NextResponse.json(
-        { error: "testId and setId are required" },
-        { status: 400 },
-      );
+    const body = await req.json();
+    const parsed = startAttemptSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
+    const { setId } = parsed.data;
+
+    const set = await db.query.sets.findFirst({
+      where: and(eq(sets.id, setId), eq(sets.status, "published")),
+    });
+
+    if (!set) {
+      return NextResponse.json({ error: "Set not found" }, { status: 404 });
+    }
+
+    const testId = set.testId;
 
     // check if the test exist in db and published
     const test = await db.query.tests.findFirst({
@@ -42,29 +53,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Test not found" }, { status: 404 });
     }
 
-    // check if the set exists
-    const set = await db.query.sets.findFirst({
-      where: and(eq(sets.id, setId), eq(sets.status, "published")),
-    });
+    // check if user has purchased the test (only if it's not free)
+    if (test.price > 0) {
+      const purchase = await db.query.purchases.findFirst({
+        where: and(
+          eq(purchases.clerkUserId, userId),
+          eq(purchases.testId, testId),
+          eq(purchases.status, "completed"),
+        ),
+      });
 
-    if (!set) {
-      return NextResponse.json({ error: "Set not found" }, { status: 404 });
-    }
-
-    // check if user has purchases the test
-    const purchase = await db.query.purchases.findFirst({
-      where: and(
-        eq(purchases.clerkUserId, userId),
-        eq(purchases.testId, testId),
-        eq(purchases.status, "completed"),
-      ),
-    });
-
-    if (!purchase) {
-      return NextResponse.json(
-        { error: "Test not Purchased" },
-        { status: 403 },
-      );
+      if (!purchase) {
+        return NextResponse.json(
+          { error: "Test not purchased" },
+          { status: 403 },
+        );
+      }
     }
 
     // check no completed attempt for this set
@@ -115,6 +119,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // fetch sections
+    const testSections = await db.query.sections.findMany({
+      where: eq(sections.setId, setId),
+      orderBy: asc(sections.order),
+    });
+
     // create a reuse attempt
     let attemptId: string;
     let isResuming = false;
@@ -135,18 +145,36 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    let savedAnswers: Record<string, string[]> = {};
+    let savedIndex = 0;
+
+    if (inProgressAttempt) {
+      const saved = await db.query.attemptAnswers.findMany({
+        where: eq(attemptAnswers.attemptId, inProgressAttempt.id),
+      });
+
+      // reconstruct the map the store expects
+      savedAnswers = Object.fromEntries(
+        saved.map((a) => [a.questionId, a.selectedOptionIds ?? []]),
+      );
+
+      savedIndex = inProgressAttempt.currentQuestionIndex ?? 0;
+    }
+
     // calculate remaning time
     const timeLimitSeconds = set.duration * 60;
-    const startedAt = inProgressAttempt?.startedAt ?? new Date();
-    const elapsedSecond = Math.floor((Date.now() - startedAt.getTime()) / 1000);
-    const remainingSeconds = Math.max(0, timeLimitSeconds - elapsedSecond);
+    const alreadyTaken = inProgressAttempt?.timeTaken ?? 0;
+    const remainingSeconds = Math.max(0, timeLimitSeconds - alreadyTaken);
 
     return NextResponse.json({
       attemptId,
+      setId,
+      testId,
       isResuming,
       remainingSeconds,
-      timeLimitSeconds,
       questions: testQuestions,
+      sections: testSections,
+      ...(isResuming && { savedAnswers, savedIndex }),
     });
   } catch (error) {
     console.error("[attempt/start]", error);
