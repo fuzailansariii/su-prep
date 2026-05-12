@@ -29,7 +29,7 @@ export default async function DashboardPage() {
 
   const userAttempts = await db.query.attempts.findMany({
     where: eq(attempts.clerkUserId, userId),
-    with: { test: true },
+    with: { test: true, set: true },
     orderBy: [desc(attempts.startedAt)],
   });
 
@@ -142,10 +142,13 @@ export default async function DashboardPage() {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-heading font-bold text-slate-900 text-sm md:text-base">
+                      <h3 className="font-heading font-bold text-slate-900 text-sm md:text-base leading-tight">
                         {attempt.test?.title || "Unknown Test"}
                       </h3>
-                      <p className="text-xs text-slate-500 font-sans mt-0.5">
+                      <p className="text-[10px] font-heading font-black uppercase tracking-widest text-brand-primary mt-0.5">
+                        {attempt.set?.title || "Unknown Set"}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-sans mt-1">
                         Started on{" "}
                         {new Date(attempt.startedAt).toLocaleDateString(
                           "en-US",
@@ -157,7 +160,7 @@ export default async function DashboardPage() {
 
                   <div className="flex items-center gap-3 w-full sm:w-auto">
                     <span
-                      className={`text-xs font-bold font-heading px-2.5 py-1 rounded-md ${
+                      className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
                         attempt.status === "completed"
                           ? "bg-green-100 text-green-700"
                           : attempt.status === "in_progress"
@@ -176,11 +179,9 @@ export default async function DashboardPage() {
                       <Button
                         asChild
                         size="sm"
-                        className="font-bold text-xs h-8"
+                        className="font-heading font-bold text-xs h-8 rounded-lg"
                       >
-                        <Link
-                          href={`/test/${attempt.testId}/attempt?attemptId=${attempt.id}`}
-                        >
+                        <Link href={`/test/${attempt.testId}`}>
                           Resume
                         </Link>
                       </Button>

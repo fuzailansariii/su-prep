@@ -192,7 +192,7 @@ export default async function TestInstruction({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-heading font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
-                          Set {set.order}
+                          # {set.order}
                         </span>
                         <h3 className="font-heading font-bold text-slate-900">
                           {set.title}
@@ -223,7 +223,7 @@ export default async function TestInstruction({
                           className="w-full font-heading font-bold text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100 rounded-xl"
                         >
                           <Link
-                            href={`/test/${testId}/attempt?attemptId=${attempt.id}`}
+                            href={`/${set.id}`}
                           >
                             Resume Set <ChevronRight className="w-4 h-4 ml-1" />
                           </Link>
@@ -234,7 +234,7 @@ export default async function TestInstruction({
                           variant="outline"
                           className="w-full font-heading font-bold text-brand-primary border-brand-primary/30 bg-brand-primary/5 hover:bg-brand-primary/10 rounded-xl"
                         >
-                          <Link href={`/test/${testId}/result/${attempt.id}`}>
+                          <Link href={`/results/${attempt.id}`}>
                             <BarChart className="w-4 h-4 mr-1.5" /> View Results
                           </Link>
                         </Button>

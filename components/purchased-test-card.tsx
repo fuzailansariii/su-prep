@@ -57,10 +57,10 @@ export default function PurchasedTestCard({
     in_progress: (
       <Button
         asChild
-        className="flex-1 h-11 font-heading text-sm font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
+        className="flex-1 py-2 h-11 font-heading text-sm font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
       >
         <Link
-          href={`/test/${test.id}/attempt?attemptId=${attemptId}`}
+          href={`/test/${test.id}`}
           className="flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
@@ -75,7 +75,7 @@ export default function PurchasedTestCard({
         className="flex-1 h-11 font-heading text-sm font-bold rounded-xl border-green-200 text-green-700 hover:bg-green-50"
       >
         <Link
-          href={`/test/${test.id}/result/${resultId}`}
+          href={`/results/${resultId}`}
           className="flex items-center justify-center gap-2"
         >
           <Trophy className="w-4 h-4" />
@@ -112,7 +112,7 @@ export default function PurchasedTestCard({
             <span className="text-[10px] font-bold font-heading tracking-widest px-2 py-1 rounded-2xl border uppercase text-brand-muted bg-brand-label border-brand-primary/10">
               {test.difficulty}
             </span>
-            {statusBadge} {/* ✅ attempt status badge */}
+            {statusBadge} {/* attempt status badge */}
           </div>
 
           <h3 className="text-xl font-bold font-sans text-black mb-2">
@@ -134,7 +134,7 @@ export default function PurchasedTestCard({
           <Button
             asChild
             variant="outline"
-            className="flex-1 h-11 font-heading text-sm text-brand-primary font-bold rounded-xl"
+            className="flex-1 py-2 font-heading text-sm text-brand-primary font-bold rounded-xl"
           >
             <Link href={`/mock-tests/${test.id}`}>View Details</Link>
           </Button>

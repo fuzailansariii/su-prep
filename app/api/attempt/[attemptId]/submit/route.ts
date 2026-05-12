@@ -18,6 +18,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 type SubmitBody = {
   answers: { questionId: string; selectedOptionIds: string[] }[];
+  timeTaken: number;
 };
 
 // ─── POST /api/attempt/[attemptId]/submit ─────────────────────────────────────
@@ -147,10 +148,14 @@ export async function POST(
 
     // Clamp scored marks to 0 minimum
     const finalScoredMarks = Math.max(0, totalScoredMarks);
-    const timeTaken = Math.floor(
-      (Date.now() - attempt.startedAt.getTime()) / 1000,
-    );
+    const timeTaken = body.timeTaken ?? attempt.timeTaken ?? 0;
     const percentage = Math.round((finalScoredMarks / set.totalMarks) * 100);
+
+    const marksLost = Math.abs(
+      answerRows
+        .filter((a) => a.marksAwarded < 0)
+        .reduce((sum, a) => sum + a.marksAwarded, 0),
+    );
 
     // 6. Write everything atomically inside a transaction
     const resultId = nanoid();
@@ -192,6 +197,7 @@ export async function POST(
         setId: attempt.setId,
         attemptId: attemptId,
         totalMarks: set.totalMarks,
+        marksLost,
         scoredMarks: finalScoredMarks,
         correctAnswers: correctCount,
         wrongAnswers: wrongCount,

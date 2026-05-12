@@ -30,6 +30,10 @@ export const attempts = pgTable(
     setId: text("set_id")
       .notNull()
       .references(() => sets.id, { onDelete: "restrict" }),
+    // in attempts schema
+    currentQuestionIndex: integer("current_question_index")
+      .default(0)
+      .notNull(),
     pausedAt: timestamp("paused_at"),
     status: attemptStatusEnum("status").default("in_progress").notNull(),
     startedAt: timestamp("started_at").defaultNow().notNull(),
@@ -40,6 +44,7 @@ export const attempts = pgTable(
   (table) => [
     index("idx_attempts_user").on(table.clerkUserId),
     index("idx_attempts_test").on(table.testId),
+    uniqueIndex("unique_active_attempt").on(table.clerkUserId, table.setId),
   ],
 );
 
