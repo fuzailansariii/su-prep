@@ -91,9 +91,10 @@ export default function AdminTestViewPage({
   const priceDisplay = test.price === 0 ? "Free" : formatPrice(test.price);
   const testSets = test.sets ?? [];
   const totalSets = testSets.length;
+  const calculatedQuestions = testSets.reduce((acc, set) => acc + set.totalQuestions, 0);
 
   return (
-    <Container className="py-8 md:py-10 px-0 max-w-4xl mx-auto flex flex-col gap-5">
+    <Container className="py-8 md:py-10 max-w-4xl mx-auto flex flex-col gap-5">
       {/* Top nav */}
       <div className="flex items-center justify-between gap-3">
         <Button
@@ -117,7 +118,7 @@ export default function AdminTestViewPage({
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="flex flex-col sm:flex-row">
           {/* Thumbnail — fixed sidebar, always 16:9 on mobile, fixed width on desktop */}
-          <div className="w-full sm:w-68 sm:shrink-0 aspect-video sm:aspect-auto bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-100 overflow-hidden flex items-center justify-center">
+          <div className="w-full sm:w-72 sm:shrink-0 aspect-video sm:aspect-auto bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-100 overflow-hidden flex items-center justify-center">
             {test.thumbnail ? (
               <Image
                 urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!}
@@ -173,7 +174,7 @@ export default function AdminTestViewPage({
             </div>
 
             {/* Price + stats */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-slate-100 gap-4">
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-heading font-black text-brand-primary">
                   {priceDisplay}
@@ -186,7 +187,7 @@ export default function AdminTestViewPage({
               </div>
 
               <div className="flex items-center gap-5">
-                <MiniStat label="Questions" value={test.totalQuestions} />
+                <MiniStat label="Questions" value={calculatedQuestions} />
                 <div className="w-px h-8 bg-slate-100" />
                 <MiniStat label="Sets" value={totalSets} />
               </div>

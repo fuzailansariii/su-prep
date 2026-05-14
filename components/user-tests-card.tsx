@@ -7,9 +7,11 @@ import { type Test } from "@/src/db/schema/tests";
 
 interface TestCardProps {
   test: Test;
+  totalSets?: number;
+  calculatedQuestions?: number;
 }
 
-export default function TestCard({ test }: TestCardProps) {
+export default function TestCard({ test, totalSets, calculatedQuestions }: TestCardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:flex-row group hover:shadow-md transition-all duration-300">
       {/* Image Section */}
@@ -57,10 +59,16 @@ export default function TestCard({ test }: TestCardProps) {
             {test.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-3 font-medium font-body">
-            <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-brand-muted/90 mb-3 font-medium font-body">
+            {totalSets !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-brand-primary/70" />
+                <span>{totalSets} Sets</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5">
               <FileText className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.totalQuestions} Questions</span>
+              <span>{calculatedQuestions ?? test.totalQuestions} Questions</span>
             </div>
           </div>
         </div>

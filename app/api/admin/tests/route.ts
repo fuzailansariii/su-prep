@@ -19,11 +19,24 @@ export async function GET(req: NextRequest) {
     }
 
     // Admin should see all non-deleted tests
-    const data = await db
-      .select()
-      .from(tests)
-      .where(isNull(tests.deletedAt))
-      .orderBy(desc(tests.createdAt));
+    const testsData = await db.query.tests.findMany({
+      where: isNull(tests.deletedAt),
+      with: {
+        sets: {
+          columns: {
+            id: true,
+            totalQuestions: true,
+          },
+        },
+      },
+      orderBy: [desc(tests.createdAt)],
+    });
+
+    const data = testsData.map((test) => ({
+      ...test,
+      setsCount: test.sets.length,
+      calculatedQuestions: test.sets.reduce((acc, set) => acc + set.totalQuestions, 0),
+    }));
 
     return NextResponse.json({ success: true, data }, { status: 200 });
   } catch (error) {

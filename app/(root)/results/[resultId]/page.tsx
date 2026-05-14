@@ -2,6 +2,7 @@ import Container from "@/components/container";
 import { db } from "@/src/db";
 import { results } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
+import { recalculateLeaderboard } from "@/src/lib/leaderboard";
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -29,20 +30,18 @@ export default async function ResultPage({ params }: ResultPageProps) {
 
   // Fetch the result
   const result = await db.query.results.findFirst({
-    where: and(
-      eq(results.id, resultId),
-      eq(results.clerkUserId, userId),
-    ),
+    where: and(eq(results.id, resultId), eq(results.clerkUserId, userId)),
     with: {
       test: true,
       attempt: true,
-      leaderboard: true,
     },
   });
 
   if (!result) {
     notFound();
   }
+
+  const rank = await recalculateLeaderboard(result.setId, userId);
 
   return (
     <Container className="max-w-4xl bg-[#F2F3FF] flex flex-col gap-6 py-8 min-h-screen">
@@ -69,7 +68,9 @@ export default async function ResultPage({ params }: ResultPageProps) {
             size={"lg"}
             className="bg-brand-primary text-[13px] hover:bg-brand-primary/90 font-heading font-bold rounded-xl"
           >
-            <Link href={`/leaderboard/${result.testId}`}>View Leaderboard</Link>
+            <Link href={`/leaderboard/${result.testId}?setId=${result.setId}`}>
+              View Leaderboard
+            </Link>
           </Button>
         </div>
       </div>
@@ -77,12 +78,12 @@ export default async function ResultPage({ params }: ResultPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Rank Card */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-3 relative overflow-hidden">
-          {result.leaderboard?.rank && result.leaderboard.rank <= 3 && (
+          {rank <= 3 && (
             <div
               className={`absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full pointer-events-none ${
-                result.leaderboard.rank === 1
+                rank === 1
                   ? "bg-yellow-500"
-                  : result.leaderboard.rank === 2
+                  : rank === 2
                     ? "bg-slate-500"
                     : "bg-amber-600"
               }`}
@@ -96,7 +97,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
               Global Rank
             </p>
             <p className="text-3xl font-heading font-bold text-slate-800">
-              {result.leaderboard?.rank ? `#${result.leaderboard.rank}` : "-"}
+              #{rank}
             </p>
           </div>
         </div>
@@ -113,7 +114,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
             <p className="text-3xl font-heading font-bold text-slate-800">
               {result.scoredMarks}{" "}
               <span className="text-lg text-slate-400 font-normal">
-                / {result.totalMarks}
+                out of {result.totalMarks}
               </span>
             </p>
           </div>
@@ -155,7 +156,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
           Performance Breakdown
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex items-center gap-4 p-4 rounded-xl border border-emerald-100 bg-emerald-50">
             <div className="h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center">
               <CheckCircle className="h-5 w-5 text-emerald-600" />
@@ -194,6 +195,20 @@ export default async function ResultPage({ params }: ResultPageProps) {
               </p>
               <p className="text-2xl font-heading font-bold text-slate-800">
                 {result.skippedAnswers}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 rounded-xl border border-orange-100 bg-orange-50">
+            <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+              <Target className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm font-sans text-orange-800 font-medium">
+                Marks Lost
+              </p>
+              <p className="text-2xl font-heading font-bold text-orange-900">
+                -{result.marksLost}
               </p>
             </div>
           </div>

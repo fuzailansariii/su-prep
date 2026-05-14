@@ -8,6 +8,14 @@ async function getFeaturedTests() {
   return await db.query.tests.findMany({
     where: and(eq(tests.isFeatured, true), isNull(tests.deletedAt)),
     orderBy: desc(tests.createdAt),
+    with: {
+      sets: {
+        columns: {
+          id: true,
+          totalQuestions: true,
+        },
+      },
+    },
     limit: 2,
   });
 }
@@ -23,9 +31,22 @@ export default async function FeaturedTests() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-      {featuredTests.map((test) => (
-        <TestCard test={test} key={test.id} />
-      ))}
+      {featuredTests.map((test: any) => {
+        const totalSets = test.sets?.length || 0;
+        const calculatedQuestions = test.sets?.reduce(
+          (acc: number, s: any) => acc + s.totalQuestions,
+          0,
+        );
+
+        return (
+          <TestCard
+            test={test}
+            key={test.id}
+            totalSets={totalSets}
+            calculatedQuestions={calculatedQuestions}
+          />
+        );
+      })}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { questions } from "@/src/db/schema";
 import { isAdmin } from "@/src/lib/auth-helper";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { syncSetStats } from "@/src/lib/set-utils";
 
 export async function DELETE(
   req: NextRequest,
@@ -29,6 +30,11 @@ export async function DELETE(
         { success: false, error: "Question not found" },
         { status: 404 },
       );
+    }
+
+    // Sync set stats
+    if (deletedQuestion[0]?.setId) {
+      await syncSetStats(deletedQuestion[0].setId);
     }
 
     return NextResponse.json({

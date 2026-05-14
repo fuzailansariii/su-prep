@@ -10,6 +10,8 @@ interface TestDetailProps {
   attemptStatus?: "not_started" | "in_progress" | "completed";
   attemptId?: string;
   resultId?: string;
+  totalSets?: number;
+  calculatedQuestions?: number;
 }
 
 const whatsIncluded = [
@@ -24,6 +26,8 @@ export default function TestDetails({
   attemptStatus = "not_started",
   attemptId,
   resultId,
+  totalSets,
+  calculatedQuestions,
 }: TestDetailProps) {
   const discountPercent = test.originalPrice
     ? Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100)
@@ -107,11 +111,19 @@ export default function TestDetails({
             )}
 
             {/* Stats */}
-            <div className="flex justify-center">
-              <div className="flex flex-col items-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors rounded-2xl py-4 px-6 border border-slate-100 w-full">
-                <FileText size={20} className="text-brand-primary" />
-                <span className="text-[11px] font-bold text-brand-muted tracking-widest font-heading">
-                  {test.totalQuestions} QUESTIONS
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {totalSets !== undefined && (
+                <div className="flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors rounded-2xl py-3 px-2 border border-slate-100 text-center">
+                  <FileText size={18} className="text-brand-primary" />
+                  <span className="text-[10px] font-bold text-brand-muted tracking-widest font-heading">
+                    {totalSets} SETS
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors rounded-2xl py-3 px-2 border border-slate-100 text-center">
+                <CircleCheck size={18} className="text-brand-primary" />
+                <span className="text-[10px] font-bold text-brand-muted tracking-widest font-heading">
+                  {calculatedQuestions ?? test.totalQuestions} Qs
                 </span>
               </div>
             </div>
@@ -121,9 +133,9 @@ export default function TestDetails({
               attemptStatus === "completed" ? (
                 <Link
                   className="w-full py-4 rounded-xl bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold text-lg font-heading transition-all shadow-sm active:scale-[0.98] cursor-pointer text-center block"
-                  href={`/results/${resultId}`}
+                  href={`/test/${test.id}`}
                 >
-                  View Result
+                  Open Test
                 </Link>
               ) : attemptStatus === "in_progress" ? (
                 <Link

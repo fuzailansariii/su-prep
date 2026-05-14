@@ -54,7 +54,7 @@ function FilterTab({
 // ─────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────
-type TestWithCount = Test & { setsCount: number };
+type TestWithCount = Test & { setsCount: number; calculatedQuestions: number };
 
 export default function AdminTestsPage() {
   const [tests, setTests] = useState<TestWithCount[]>([]);
@@ -238,7 +238,7 @@ export default function AdminTestsPage() {
       {!loading && !error && visible.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {visible.map((test) => (
-            <AdminTestCard key={test.id} test={test} setsCount={test.setsCount} onDelete={handleDelete} />
+            <AdminTestCard key={test.id} test={test} setsCount={test.setsCount} calculatedQuestions={test.calculatedQuestions} onDelete={handleDelete} />
           ))}
         </div>
       )}

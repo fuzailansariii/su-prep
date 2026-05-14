@@ -32,7 +32,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-in fade-in duration-200">
       <div 
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
-        onClick={onCancel} 
+        onClick={isLoading ? undefined : onCancel} 
       />
       <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] p-6 sm:p-8 flex flex-col gap-6 relative z-10 animate-in zoom-in-95 duration-200">
         <div className="flex items-start gap-4">

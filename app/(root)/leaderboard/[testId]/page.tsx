@@ -13,24 +13,45 @@ interface LeaderboardPageProps {
   params: Promise<{
     testId: string;
   }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function LeaderboardPage({
   params,
+  searchParams,
 }: LeaderboardPageProps) {
   const { testId } = await params;
+  const resolvedSearchParams = await searchParams;
 
-  // 1. Fetch test details
+  // 1. Fetch test details with sets
   const test = await db.query.tests.findFirst({
     where: eq(tests.id, testId),
+    with: {
+      sets: {
+        orderBy: (s, { asc }) => [asc(s.order)],
+      },
+    },
   });
 
   if (!test) {
     notFound();
   }
 
-  // 2. Fetch leaderboard entries
-  const leaderboardEntries = await getLeaderboard(testId);
+  const testSets = test.sets;
+  if (testSets.length === 0) {
+    return (
+      <Container className="py-12 max-w-5xl text-center text-slate-500 font-sans">
+        This test has no sets yet.
+      </Container>
+    );
+  }
+
+  // Determine active set
+  const activeSetId = (resolvedSearchParams.setId as string) || testSets[0].id;
+  const activeSet = testSets.find((s) => s.id === activeSetId) || testSets[0];
+
+  // 2. Fetch leaderboard entries for the ACTIVE SET
+  const leaderboardEntries = await getLeaderboard(activeSet.id);
 
   // 3. Fetch user details from Clerk for those entries
   let enrichedEntries: any[] = [];
@@ -102,10 +123,30 @@ export default async function LeaderboardPage({
         </div>
       </div>
 
+      {/* Set Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar">
+        {testSets.map((set) => {
+          const isActive = set.id === activeSet.id;
+          return (
+            <Link
+              key={set.id}
+              href={`/leaderboard/${test.id}?setId=${set.id}`}
+              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-bold font-heading transition-colors border ${
+                isActive
+                  ? "bg-brand-primary text-white border-brand-primary shadow-sm"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-brand-primary/50"
+              }`}
+            >
+              {set.title}
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
         {enrichedEntries.length === 0 ? (
           <div className="p-12 text-center text-slate-500 font-sans">
-            No one has completed this test yet. Be the first to claim the top
+            No one has completed <span className="font-bold text-slate-700">{activeSet.title}</span> yet. Be the first to claim the top
             spot!
           </div>
         ) : (

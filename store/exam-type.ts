@@ -55,6 +55,7 @@ export type ExamStore = {
   lastSyncedAt: Date | null;
   isDirty: boolean;
   isSubmitting: boolean;
+  isPausing: boolean;
   networkStatus: "online" | "offline";
 
   // Actions
@@ -66,8 +67,12 @@ export type ExamStore = {
   goToNext: () => void;
   goToPrev: () => void;
   tickTimer: () => void;
-  pauseExam: () => void;
+  pauseExam: (callback?: () => void) => Promise<void>;
   submitExam: () => void;
   markDirty: () => void;
   markSynced: () => void;
+
+  showSubmitDialog: boolean;
+  setShowSubmitDialog: (show: boolean) => void;
+  setIsSubmitting: (submitting: boolean) => void;
 };

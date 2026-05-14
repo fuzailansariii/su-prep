@@ -1,4 +1,10 @@
-import { Clock, FileText, Play, RotateCcw, Trophy } from "lucide-react";
+import {
+  BookOpen,
+  CheckCircle2,
+  FileText,
+  Play,
+  RotateCcw,
+} from "lucide-react";
 import { Image } from "@imagekit/next";
 import Link from "next/link";
 import { Button } from "./ui/button";
@@ -12,14 +18,15 @@ interface PurchasedTestCardProps {
   attemptId?: string;
   resultId?: string;
   score?: number;
+  totalSets?: number;
+  calculatedQuestions?: number;
 }
 
 export default function PurchasedTestCard({
   test,
-  attemptStatus,
-  attemptId,
-  resultId,
-  score,
+  attemptStatus = "not_started",
+  totalSets,
+  calculatedQuestions,
 }: PurchasedTestCardProps) {
   const statusBadge = {
     not_started: (
@@ -28,13 +35,13 @@ export default function PurchasedTestCard({
       </span>
     ),
     in_progress: (
-      <span className="text-[10px] font-bold font-heading tracking-widest px-2 py-1 rounded-2xl bg-amber-100 text-amber-700">
-        IN PROGRESS
+      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest">
+        <RotateCcw className="w-3 h-3" /> IN PROGRESS
       </span>
     ),
     completed: (
-      <span className="text-[10px] font-bold font-heading tracking-widest px-2 py-1 rounded-2xl bg-green-100 text-green-700">
-        COMPLETED
+      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
+        <CheckCircle2 className="w-3 h-3" /> COMPLETED
       </span>
     ),
   }[attemptStatus];
@@ -43,7 +50,7 @@ export default function PurchasedTestCard({
     not_started: (
       <Button
         asChild
-        className="flex-1 h-11 font-heading text-sm font-bold rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white shadow-sm"
+        className="flex-1 h-11 py-2 font-heading text-sm font-bold rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white shadow-sm"
       >
         <Link
           href={`/test/${test.id}`}
@@ -75,11 +82,11 @@ export default function PurchasedTestCard({
         className="flex-1 h-11 font-heading text-sm font-bold rounded-xl border-green-200 text-green-700 hover:bg-green-50"
       >
         <Link
-          href={`/results/${resultId}`}
+          href={`/test/${test.id}`}
           className="flex items-center justify-center gap-2"
         >
-          <Trophy className="w-4 h-4" />
-          View Result {score !== undefined && `· ${score}%`}
+          <BookOpen className="w-4 h-4" />
+          Open Test
         </Link>
       </Button>
     ),
@@ -91,7 +98,7 @@ export default function PurchasedTestCard({
       <div className="relative w-full md:w-64 h-48 md:h-auto shrink-0 bg-slate-100 overflow-hidden">
         {test.thumbnail ? (
           <Image
-            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
+            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!}
             src={test.thumbnail}
             alt={test.title}
             fill
@@ -112,7 +119,7 @@ export default function PurchasedTestCard({
             <span className="text-[10px] font-bold font-heading tracking-widest px-2 py-1 rounded-2xl border uppercase text-brand-muted bg-brand-label border-brand-primary/10">
               {test.difficulty}
             </span>
-            {statusBadge} {/* attempt status badge */}
+            {statusBadge}
           </div>
 
           <h3 className="text-xl font-bold font-sans text-black mb-2">
@@ -123,9 +130,17 @@ export default function PurchasedTestCard({
           </p>
 
           <div className="flex flex-wrap items-center gap-6 text-sm text-brand-muted/90 mb-4 font-medium font-body">
+            {totalSets !== undefined && (
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4 text-brand-primary/70" />
+                <span>{totalSets} Sets</span>
+              </div>
+            )}
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4 text-brand-primary/70" />
-              <span>{test.totalQuestions} Questions</span>
+              <span>
+                {calculatedQuestions ?? test.totalQuestions} Questions
+              </span>
             </div>
           </div>
         </div>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import TopBar from "./attempt-topbar";
 
+import { AttemptMobileSidebar } from "@/components/attempt/attempt-mobile-sidebar";
+
 export default function AttemptLayout({
   children,
 }: {
@@ -35,6 +37,7 @@ export default function AttemptLayout({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <TopBar onMenuClick={mobileMenuHandler} />
+      <AttemptMobileSidebar isOpen={open} onClose={() => setIsOpen(false)} />
       {children}
     </div>
   );

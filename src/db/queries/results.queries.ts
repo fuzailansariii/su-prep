@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "..";
-import { leaderboard, results } from "../schema";
-import type { NewLeaderboard, NewResult } from "../schema";
+import { results } from "../schema";
+import type { NewResult } from "../schema";
 
 export async function createResult(data: NewResult) {
   const result = await db.insert(results).values(data).returning();
@@ -55,35 +55,3 @@ export async function getUserResults(clerkUserId: string) {
   });
 }
 
-// Leaderboard with score details embedded
-export async function getLeaderboardForSet(setId: string) {
-  return db.query.leaderboard.findMany({
-    where: eq(leaderboard.setId, setId),
-    orderBy: leaderboard.rank,
-    with: {
-      result: {
-        columns: {
-          scoredMarks: true,
-          totalMarks: true,
-          percentage: true,
-          timeTaken: true,
-        },
-      },
-    },
-  });
-}
-
-export async function upsertLeaderboardEntry(data: NewLeaderboard) {
-  const result = await db
-    .insert(leaderboard)
-    .values(data)
-    .onConflictDoUpdate({
-      target: [leaderboard.setId, leaderboard.clerkUserId],
-      set: {
-        rank: data.rank,
-        resultId: data.resultId,
-      },
-    })
-    .returning();
-  return result[0];
-}

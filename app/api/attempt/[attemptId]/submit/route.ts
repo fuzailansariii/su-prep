@@ -124,8 +124,8 @@ export async function POST(
         } else {
           wrongCount++;
           if (set.negativeMarking) {
-            marksAwarded = -Math.round(
-              question.marks * ((set.negativeMarkFraction ?? 25) / 100),
+            marksAwarded = -(
+              question.marks * ((set.negativeMarkFraction ?? 25) / 100)
             );
           } else {
             marksAwarded = 0;
@@ -146,34 +146,31 @@ export async function POST(
       });
     }
 
-    // Clamp scored marks to 0 minimum
-    const finalScoredMarks = Math.max(0, totalScoredMarks);
+    // Clamp scored marks to 0 minimum and format
+    const finalScoredMarks = Number(Math.max(0, totalScoredMarks).toFixed(2));
     const timeTaken = body.timeTaken ?? attempt.timeTaken ?? 0;
-    const percentage = Math.round((finalScoredMarks / set.totalMarks) * 100);
 
-    const marksLost = Math.abs(
-      answerRows
-        .filter((a) => a.marksAwarded < 0)
-        .reduce((sum, a) => sum + a.marksAwarded, 0),
+    // Safety check for totalMarks
+    const percentage =
+      set.totalMarks > 0
+        ? Number(((finalScoredMarks / set.totalMarks) * 100).toFixed(2))
+        : 0;
+
+    const marksLost = Number(
+      Math.abs(
+        answerRows
+          .filter((a) => a.marksAwarded < 0)
+          .reduce((sum, a) => sum + a.marksAwarded, 0),
+      ).toFixed(2),
     );
 
     // 6. Write everything atomically inside a transaction
     const resultId = nanoid();
     await db.transaction(async (tx) => {
       // Upsert answers: clear old ones first if resuming
-      const existingAnswerIds = await tx
-        .select({ id: attemptAnswers.id })
-        .from(attemptAnswers)
+      await tx
+        .delete(attemptAnswers)
         .where(eq(attemptAnswers.attemptId, attemptId));
-
-      if (existingAnswerIds.length > 0) {
-        await tx.delete(attemptAnswers).where(
-          inArray(
-            attemptAnswers.id,
-            existingAnswerIds.map((r) => r.id),
-          ),
-        );
-      }
 
       if (answerRows.length > 0) {
         await tx.insert(attemptAnswers).values(answerRows);

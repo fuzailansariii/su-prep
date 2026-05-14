@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import axios from "axios";
-import { ChevronDown, Menu } from "lucide-react";
+import { Menu, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useExamStore } from "@/store/exam-store";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import CountdownTimer from "@/components/attempt/timer";
 import logo from "@/public/su-cropped.png";
 import Image from "next/image";
 
-export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
+export default function TopBar({ onMenuClick, isLoading }: { onMenuClick?: () => void; isLoading?: boolean }) {
   const router = useRouter();
 
   const testTitle = useExamStore((s) => s.testTitle);
@@ -22,18 +23,28 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   const isSubmitting = useExamStore((s) => s.isSubmitting);
   const submitExam = useExamStore((s) => s.submitExam);
   const timeRemaining = useExamStore((s) => s.timeRemaining);
-
-  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const status = useExamStore((s) => s.status);
+  const showSubmitDialog = useExamStore((s) => s.showSubmitDialog);
+  const setShowSubmitDialog = useExamStore((s) => s.setShowSubmitDialog);
+  const pauseExam = useExamStore((s) => s.pauseExam);
+  const isPausing = useExamStore((s) => s.isPausing);
+  const [isPauseConfirmOpen, setIsPauseConfirmOpen] = useState(false);
+  const testId = useExamStore((s) => s.testId);
 
   const handleSubmitConfirm = async () => {
-    if (!attemptId) return;
+    if (!attemptId) {
+      toast.error("Invalid attempt session. Please refresh.");
+      return;
+    }
+
     submitExam(); // sets isSubmitting: true in store
+    setShowSubmitDialog(false); // Close dialog immediately
 
     try {
-      const answersPayload = Object.entries(answers).map(
-        ([questionId, selectedOptionIds]) => ({
-          questionId,
-          selectedOptionIds,
+      const answersPayload = (useExamStore.getState().questions || []).map(
+        (q) => ({
+          questionId: q.id,
+          selectedOptionIds: answers[q.id] || [],
         }),
       );
 
@@ -42,11 +53,27 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         timeTaken,
       });
 
+      toast.success("Exam submitted successfully!");
       router.replace(`/results/${res.data.resultId}`);
     } catch (err) {
       console.error("Submit failed:", err);
+      toast.error(
+        "Submission failed. Please check your connection and try again.",
+      );
       // Don't leave user stuck — reset submitting state
       useExamStore.setState({ isSubmitting: false, status: "in_progress" });
+    }
+  };
+
+  const handlePauseConfirm = async () => {
+    setIsPauseConfirmOpen(false);
+    try {
+      await pauseExam(() => {
+        toast.success("Exam paused successfully.");
+        router.replace(`/test/${testId}`);
+      });
+    } catch (err) {
+      toast.error("Failed to pause exam. Please try again.");
     }
   };
 
@@ -70,15 +97,29 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         <div className="flex items-center gap-4 shrink-0">
           <CountdownTimer
             seconds={timeRemaining}
-            onExpire={handleSubmitConfirm}
+            onExpire={() => {
+              if (status === "in_progress") {
+                handleSubmitConfirm();
+              }
+            }}
             variant="lavender"
           />
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-10 px-3 rounded-xl font-heading font-bold text-xs border-amber-200 text-amber-700 hover:bg-amber-50 hidden md:flex items-center gap-2"
+            onClick={() => setIsPauseConfirmOpen(true)}
+            disabled={isSubmitting || isPausing || isLoading || status !== "in_progress"}
+          >
+            <Pause size={14} /> Pause
+          </Button>
 
           <Button
             size="lg"
             className="h-10 px-5 rounded-xl font-heading font-bold text-sm bg-brand-primary hover:bg-brand-primary/90 text-white shadow-lg shadow-brand-primary/25 hidden md:flex"
             onClick={() => setShowSubmitDialog(true)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isPausing || isLoading || status !== "in_progress"}
           >
             Submit Test
           </Button>
@@ -100,6 +141,15 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         onConfirm={handleSubmitConfirm}
         onCancel={() => setShowSubmitDialog(false)}
         isLoading={isSubmitting}
+      />
+
+      <ConfirmDialog
+        open={isPauseConfirmOpen}
+        title="Pause Test?"
+        message="Your progress will be saved. You can resume this test later from the dashboard."
+        onConfirm={handlePauseConfirm}
+        onCancel={() => setIsPauseConfirmOpen(false)}
+        isLoading={isPausing}
       />
     </>
   );

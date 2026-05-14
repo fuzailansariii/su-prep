@@ -116,11 +116,11 @@ export function TestSetsList({ testId, initialSets, onDelete }: Props) {
             {sets.map((set) => (
               <div
                 key={set.id}
-                className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50/60 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50/60 transition-colors"
               >
                 {/* Left — order badge + info */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-xs font-heading font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded shrink-0">
+                <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                  <span className="text-xs font-heading font-bold text-slate-400 bg-slate-100 px-2 py-0.5 mt-0.5 sm:mt-0 rounded shrink-0">
                     #{set.order}
                   </span>
                   <div className="min-w-0">
@@ -159,7 +159,7 @@ export function TestSetsList({ testId, initialSets, onDelete }: Props) {
                 </div>
 
                 {/* Right — actions */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto justify-end">
                   <Button
                     asChild
                     variant="outline"
