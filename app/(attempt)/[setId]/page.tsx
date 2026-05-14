@@ -32,11 +32,15 @@ export default function AttemptPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const hasFetched = useRef(false);
+  const fetchedSetId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
+    if (fetchedSetId.current === setId) return;
+    fetchedSetId.current = setId;
+    
+    setLoading(true);
+    setError(null);
+
     axios
       .post("/api/attempt/start", { setId })
       .then((res) => {
@@ -145,6 +149,7 @@ function ExamShell() {
     selectAnswer,
     toggleReview,
     isSubmitting,
+    setShowSubmitDialog,
   } = useExamStore(
     useShallow((s) => ({
       questions: s.questions,
@@ -159,6 +164,7 @@ function ExamShell() {
       selectAnswer: s.selectAnswer,
       toggleReview: s.toggleReview,
       isSubmitting: s.isSubmitting,
+      setShowSubmitDialog: s.setShowSubmitDialog,
     })),
   );
 
@@ -186,7 +192,7 @@ function ExamShell() {
         </div>
 
         {/* Desktop Pagination */}
-        <div className="hidden md:flex items-center gap-1.5 flex-1 justify-center overflow-x-auto px-4 no-scrollbar">
+        <div className="hidden md:flex items-center gap-1.5 flex-1 max-w-md lg:max-w-2xl overflow-x-auto px-4 no-scrollbar scroll-smooth mx-auto">
           {questions.map((q, idx) => {
             const status = questionStatus[q.id];
             const isCurrent = idx === currentIndex;
@@ -194,7 +200,17 @@ function ExamShell() {
             return (
               <button
                 key={q.id}
+                id={`q-nav-${idx}`}
                 onClick={() => goToQuestion(idx)}
+                ref={(el) => {
+                  if (isCurrent && el) {
+                    el.scrollIntoView({
+                      behavior: "smooth",
+                      block: "nearest",
+                      inline: "center",
+                    });
+                  }
+                }}
                 className={cn(
                   "w-8 h-8 rounded-lg text-xs font-bold font-heading transition-all border flex items-center justify-center shrink-0",
                   isCurrent
@@ -205,6 +221,7 @@ function ExamShell() {
                         ? "bg-amber-50 border-amber-200 text-amber-600"
                         : "bg-white border-slate-200 text-slate-500 hover:border-slate-300",
                 )}
+                disabled={isSubmitting}
               >
                 {idx + 1}
               </button>
@@ -218,7 +235,7 @@ function ExamShell() {
             variant="outline"
             size="sm"
             onClick={goToPrev}
-            disabled={currentIndex === 0}
+            disabled={currentIndex === 0 || isSubmitting}
             className="h-9 px-3 rounded-xl border-slate-200 font-heading font-bold text-slate-600 hover:bg-white hover:text-brand-primary"
           >
             <ChevronLeft size={16} className="mr-1" /> Previous
@@ -226,7 +243,7 @@ function ExamShell() {
           <Button
             size="sm"
             onClick={goToNext}
-            disabled={currentIndex === questions.length - 1}
+            disabled={currentIndex === questions.length - 1 || isSubmitting}
             className="h-9 px-4 rounded-xl bg-indigo-900 hover:bg-indigo-950 text-white font-heading font-bold"
           >
             Next <ChevronRight size={16} className="ml-1" />
@@ -282,6 +299,7 @@ function ExamShell() {
                       onClick={() =>
                         selectAnswer(currentQuestion.id, [option.id])
                       }
+                      disabled={isSubmitting}
                       className={cn(
                         "w-full flex items-center gap-4 p-3 rounded-2xl border-2 transition-all text-left group",
                         isSelected
@@ -344,6 +362,7 @@ function ExamShell() {
               variant="outline"
               size="lg"
               onClick={() => toggleReview(currentQuestion.id)}
+              disabled={isSubmitting}
               className={cn(
                 "flex-1 sm:flex-none h-10 px-4 rounded-lg font-heading font-bold text-sm transition-all border-2",
                 markedForReview[currentQuestion.id]
@@ -361,11 +380,19 @@ function ExamShell() {
             </Button>
             <Button
               size="lg"
-              onClick={goToNext}
-              disabled={currentIndex === questions.length - 1}
+              onClick={() => {
+                if (currentIndex === questions.length - 1) {
+                  setShowSubmitDialog(true);
+                } else {
+                  goToNext();
+                }
+              }}
+              disabled={isSubmitting}
               className="flex-1 sm:flex-none h-10 px-4 rounded-lg bg-brand-primary hover:bg-brand-primary/90 text-white font-heading font-bold text-sm shadow-xl shadow-brand-primary/20"
             >
-              Save & Next
+              {currentIndex === questions.length - 1
+                ? "Submit Exam"
+                : "Save & Next"}
             </Button>
           </div>
         </div>

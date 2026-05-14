@@ -61,7 +61,7 @@ export const attemptAnswers = pgTable(
     selectedOptionIds: text("selected_option_ids").array(),
     isCorrect: boolean("is_correct").default(false).notNull(),
     isMarkedForReview: boolean("is_marked_for_review").default(false).notNull(),
-    marksAwarded: integer("marks_awarded").notNull().default(0),
+    marksAwarded: real("marks_awarded").notNull().default(0),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [

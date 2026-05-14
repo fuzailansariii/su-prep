@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/src/db";
-import { attempts, purchases, results } from "@/src/db/schema";
+import { attempts, purchases, results, sets } from "@/src/db/schema";
 import { desc, eq, and } from "drizzle-orm";
 import Container from "@/components/container";
 import { StatCard } from "@/components/ui/stat-card";
@@ -62,7 +62,13 @@ export default async function DashboardPage() {
       eq(purchases.status, "completed"),
     ),
     with: {
-      test: true,
+      test: {
+        with: {
+          sets: {
+            where: eq(sets.status, "published"),
+          },
+        },
+      },
     },
     orderBy: [desc(purchases.createdAt)],
   });
@@ -71,9 +77,9 @@ export default async function DashboardPage() {
   // Filter here to avoid dashboard showing items that later 404.
   const purchasedTests = userPurchases
     .map((p) => p.test)
-    .filter(
-      (t): t is Test => !!t && t.status === "published" && t.deletedAt === null,
-    );
+    .filter((t) => !!t && t.status === "published" && t.deletedAt === null) as NonNullable<
+    (typeof userPurchases)[0]["test"]
+  >[];
 
   return (
     <div className="bg-[#FAF8FF] min-h-screen pb-20">
@@ -175,7 +181,7 @@ export default async function DashboardPage() {
                           : "Abandoned"}
                     </span>
 
-                    {attempt.status === "in_progress" && (
+                    {attempt.status === "in_progress" ? (
                       <Button
                         asChild
                         size="sm"
@@ -185,7 +191,18 @@ export default async function DashboardPage() {
                           Resume
                         </Link>
                       </Button>
-                    )}
+                    ) : attempt.status === "completed" ? (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="font-heading font-bold text-xs h-8 rounded-lg text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
+                      >
+                        <Link href={`/results/${resultMap.get(attempt.id)?.id || attempt.id}`}>
+                          View Result
+                        </Link>
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -216,6 +233,11 @@ export default async function DashboardPage() {
               {purchasedTests.map((test) => {
                 const attempt = attemptMap.get(test.id);
                 const result = attempt ? resultMap.get(attempt.id) : undefined;
+                const totalSets = test.sets?.length || 0;
+                const calculatedQuestions = test.sets?.reduce(
+                  (acc, set) => acc + set.totalQuestions,
+                  0,
+                ) || 0;
 
                 return (
                   <PurchasedTestCard
@@ -231,6 +253,8 @@ export default async function DashboardPage() {
                     attemptId={attempt?.id}
                     resultId={result?.id}
                     score={result?.percentage}
+                    totalSets={totalSets}
+                    calculatedQuestions={calculatedQuestions}
                   />
                 );
               })}

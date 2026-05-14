@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { z } from "zod";
+import { syncSetStats } from "@/src/lib/set-utils";
 
 type Context = { params: Promise<{ sectionId: string }> };
 
@@ -125,6 +126,9 @@ export async function POST(req: NextRequest, { params }: Context) {
       }
       return created;
     });
+
+    // Sync set stats
+    await syncSetStats(section.setId);
 
     return NextResponse.json(
       {

@@ -2,6 +2,7 @@ import Container from "@/components/container";
 import { db } from "@/src/db";
 import { results } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
+import { recalculateLeaderboard } from "@/src/lib/leaderboard";
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -37,13 +38,14 @@ export default async function ResultPage({ params }: ResultPageProps) {
     with: {
       test: true,
       attempt: true,
-      leaderboard: true,
     },
   });
 
   if (!result) {
     notFound();
   }
+
+  const rank = await recalculateLeaderboard(result.setId, userId);
 
   return (
     <Container className="max-w-4xl bg-[#F2F3FF] flex flex-col gap-6 py-8 min-h-screen">
@@ -78,12 +80,12 @@ export default async function ResultPage({ params }: ResultPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Rank Card */}
         <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col items-center justify-center gap-3 relative overflow-hidden">
-          {result.leaderboard?.rank && result.leaderboard.rank <= 3 && (
+          {rank <= 3 && (
             <div
               className={`absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full pointer-events-none ${
-                result.leaderboard.rank === 1
+                rank === 1
                   ? "bg-yellow-500"
-                  : result.leaderboard.rank === 2
+                  : rank === 2
                     ? "bg-slate-500"
                     : "bg-amber-600"
               }`}
@@ -97,7 +99,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
               Global Rank
             </p>
             <p className="text-3xl font-heading font-bold text-foreground">
-              {result.leaderboard?.rank ? `#${result.leaderboard.rank}` : "-"}
+              #{rank}
             </p>
           </div>
         </div>

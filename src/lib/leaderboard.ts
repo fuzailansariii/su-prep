@@ -1,91 +1,40 @@
 import { db } from "@/src/db";
-import { results, leaderboard } from "@/src/db/schema";
-import { eq, asc } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { results } from "@/src/db/schema";
+import { eq, asc, sql } from "drizzle-orm";
 
 export async function recalculateLeaderboard(
   setId: string,
   clerkUserId: string,
 ) {
-  // 1. Fetch all results for this set
-  const allResults = await db
-    .select()
+  // Production Style: 
+  // We no longer write to a separate leaderboard table which causes 
+  // excessive DB writes. Instead, we compute the rank dynamically.
+  // This function just returns the rank of the current user.
+  
+  const rankSubquery = db
+    .select({
+      userId: results.clerkUserId,
+      rank: sql<number>`dense_rank() OVER (ORDER BY ${results.scoredMarks} DESC, ${results.percentage} DESC, ${results.timeTaken} ASC)`.as("rank"),
+    })
     .from(results)
-    .where(eq(results.setId, setId));
+    .where(eq(results.setId, setId))
+    .as("rankSubquery");
 
-  // 2. Sort in JS using dense ranking logic
-  const sorted = allResults.sort((a, b) => {
-    if (b.scoredMarks !== a.scoredMarks) return b.scoredMarks - a.scoredMarks;
-    if (b.percentage !== a.percentage) return b.percentage - a.percentage;
-    return a.timeTaken - b.timeTaken;
-  });
+  const userRank = await db
+    .select({ rank: rankSubquery.rank })
+    .from(rankSubquery)
+    .where(eq(rankSubquery.userId, clerkUserId))
+    .limit(1);
 
-  // 3. Assign dense ranks
-  const rankEntries: {
-    setId: string;
-    clerkUserId: string;
-    resultId: string;
-    rank: number;
-  }[] = [];
-
-  let currentRank = 1;
-  let targetUserRank = 1;
-
-  for (let i = 0; i < sorted.length; i++) {
-    if (i > 0) {
-      const prev = sorted[i - 1];
-      const curr = sorted[i];
-
-      const isTied =
-        curr.scoredMarks === prev.scoredMarks &&
-        curr.percentage === prev.percentage &&
-        curr.timeTaken === prev.timeTaken;
-
-      if (!isTied) currentRank++;
-    }
-
-    rankEntries.push({
-      setId,
-      clerkUserId: sorted[i].clerkUserId,
-      resultId: sorted[i].id,
-      rank: currentRank,
-    });
-
-    if (sorted[i].clerkUserId === clerkUserId) {
-      targetUserRank = currentRank;
-    }
-  }
-
-  // 4. Upsert ALL ranks into leaderboard to ensure previously ranked users are properly shifted down
-  for (const entry of rankEntries) {
-    await db
-      .insert(leaderboard)
-      .values({
-        id: nanoid(),
-        setId: entry.setId,
-        clerkUserId: entry.clerkUserId,
-        resultId: entry.resultId,
-        rank: entry.rank,
-        createdAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [leaderboard.setId, leaderboard.clerkUserId],
-        set: {
-          rank: entry.rank,
-          resultId: entry.resultId,
-        },
-      });
-  }
-
-  // Return the specific user's new rank so it can be displayed on the result page
-  return targetUserRank;
+  return userRank[0]?.rank ?? 1;
 }
 
 export async function getLeaderboard(setId: string) {
-  return await db
+  // Use SQL window function to dynamically rank all results on the fly
+  const rankedResults = await db
     .select({
-      rank: leaderboard.rank,
-      clerkUserId: leaderboard.clerkUserId,
+      rank: sql<number>`dense_rank() OVER (ORDER BY ${results.scoredMarks} DESC, ${results.percentage} DESC, ${results.timeTaken} ASC)`.mapWith(Number),
+      clerkUserId: results.clerkUserId,
       scoredMarks: results.scoredMarks,
       totalMarks: results.totalMarks,
       percentage: results.percentage,
@@ -93,8 +42,13 @@ export async function getLeaderboard(setId: string) {
       correctAnswers: results.correctAnswers,
       wrongAnswers: results.wrongAnswers,
     })
-    .from(leaderboard)
-    .innerJoin(results, eq(leaderboard.resultId, results.id))
-    .where(eq(leaderboard.setId, setId))
-    .orderBy(asc(leaderboard.rank));
+    .from(results)
+    .where(eq(results.setId, setId))
+    .orderBy(
+      sql`${results.scoredMarks} DESC`,
+      sql`${results.percentage} DESC`,
+      sql`${results.timeTaken} ASC`,
+    );
+
+  return rankedResults;
 }

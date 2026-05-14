@@ -73,9 +73,11 @@ export default async function TestInstruction({
   // get sets in a test
   const testSets = test.sets;
 
-  // fetch user attempts for this test
   const userAttempts = await db.query.attempts.findMany({
     where: and(eq(attempts.clerkUserId, userId), eq(attempts.testId, testId)),
+    with: {
+      result: true,
+    },
   });
 
   const getAttemptForSet = (setId: string) => {
@@ -234,7 +236,7 @@ export default async function TestInstruction({
                           variant="outline"
                           className="w-full font-heading font-bold text-brand-primary border-brand-primary/30 bg-brand-primary/5 hover:bg-brand-primary/10 rounded-xl"
                         >
-                          <Link href={`/results/${attempt.id}`}>
+                          <Link href={`/results/${attempt.result?.id || attempt.id}`}>
                             <BarChart className="w-4 h-4 mr-1.5" /> View Results
                           </Link>
                         </Button>

@@ -32,17 +32,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { setId, name, order } = result.data;
+    const { setId, name, order: providedOrder } = result.data;
 
     // Verify set exists
     const set = await db.query.sets.findFirst({ where: eq(sets.id, setId) });
     if (!set)
       return NextResponse.json({ success: false, message: "Set not found" }, { status: 404 });
 
+    // Handle order automatically to avoid unique constraint violations
+    let finalOrder = providedOrder;
+    const existingSections = await db.query.sections.findMany({
+      where: eq(sections.setId, setId),
+      orderBy: (s, { desc }) => [desc(s.order)],
+    });
+
+    if (existingSections.some((s) => s.order === providedOrder)) {
+      finalOrder = (existingSections[0]?.order ?? 0) + 1;
+    }
+
     const id = nanoid(12);
     const newSection = await db
       .insert(sections)
-      .values({ id, setId, name, order })
+      .values({ id, setId, name, order: finalOrder })
       .returning();
 
     return NextResponse.json(

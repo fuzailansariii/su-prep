@@ -9,10 +9,12 @@ import Link from "next/link";
 export function AdminTestCard({
   test,
   setsCount = 0,
+  calculatedQuestions,
   onDelete,
 }: {
   test: Test;
   setsCount?: number;
+  calculatedQuestions?: number;
   onDelete?: (id: string) => void;
 }) {
   const priceDisplay = test.price === 0 ? "Free" : formatPrice(test.price);
@@ -71,7 +73,7 @@ export function AdminTestCard({
       <div className="flex items-center gap-3 flex-wrap border-t border-slate-100 pt-3">
         <span className="flex items-center gap-1 text-xs text-slate-500 font-sans">
           <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-          {test.totalQuestions} questions
+          {calculatedQuestions ?? test.totalQuestions} questions
         </span>
         <span className="text-slate-200">·</span>
         <span className="flex items-center gap-1 text-xs text-slate-500 font-sans">

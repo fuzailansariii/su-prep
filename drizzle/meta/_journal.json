@@ -22,6 +22,20 @@
       "when": 1778567947309,
       "tag": "0002_luxuriant_kid_colt",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778782060109,
+      "tag": "0003_blushing_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778783193392,
+      "tag": "0004_fuzzy_la_nuit",
+      "breakpoints": true
     }
   ]
 }

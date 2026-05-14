@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import axios from "axios";
 import { ExamStore } from "./exam-type";
 import {
   buildInitialStatuses,
@@ -25,7 +26,9 @@ export const useExamStore = create<ExamStore>((set, get) => ({
   lastSyncedAt: null,
   isDirty: false,
   isSubmitting: false,
+  isPausing: false,
   networkStatus: "online",
+  showSubmitDialog: false,
 
   // fresh start
   initExam: (data) => {
@@ -177,15 +180,37 @@ export const useExamStore = create<ExamStore>((set, get) => ({
   },
 
   // pause exam
-  pauseExam: () => {
+  pauseExam: async (callback?: () => void) => {
     const state = get();
-    if (!state.attemptId) return;
+    if (!state.attemptId || state.isPausing) return;
 
-    // save last update before pausing
-    syncToLocalStorage(state);
-    set({
-      status: "paused",
-    });
+    set({ isPausing: true });
+
+    try {
+      const answersPayload = (state.questions || []).map((q) => ({
+        questionId: q.id,
+        selectedOptionIds: state.answers[q.id] || [],
+      }));
+
+      await axios.patch(`/api/attempt/${state.attemptId}/pause`, {
+        answers: answersPayload,
+        timeTaken: state.timeTaken,
+        currentQuestionIndex: state.currentQuestionIndex,
+      });
+
+      // save last update before pausing
+      syncToLocalStorage(state);
+      set({
+        status: "idle", // Reset to idle so they can't interact
+        isPausing: false,
+      });
+
+      if (callback) callback();
+    } catch (err) {
+      console.error("Pause failed:", err);
+      set({ isPausing: false });
+      throw err;
+    }
   },
 
   // submit exam
@@ -200,6 +225,10 @@ export const useExamStore = create<ExamStore>((set, get) => ({
     });
   },
 
+  setIsSubmitting: (submitting: boolean) => {
+    set({ isSubmitting: submitting });
+  },
+
   // mark exam as dirty
   markDirty: () => {
     set({ isDirty: true });
@@ -211,5 +240,9 @@ export const useExamStore = create<ExamStore>((set, get) => ({
       isDirty: false,
       lastSyncedAt: new Date(),
     }));
+  },
+
+  setShowSubmitDialog: (show: boolean) => {
+    set({ showSubmitDialog: show });
   },
 }));

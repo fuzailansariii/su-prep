@@ -3,7 +3,7 @@ import { tests } from "./tests";
 import { questions, options } from "./questions";
 import { purchases } from "./purchases";
 import { attempts, attemptAnswers } from "./attempts";
-import { results, leaderboard } from "./results";
+import { results } from "./results";
 import { sets } from "./sets";
 import { sections } from "./sections";
 
@@ -25,7 +25,6 @@ export const setsRelations = relations(sets, ({ one, many }) => ({
   sections: many(sections),
   attempts: many(attempts),
   results: many(results),
-  leaderboard: many(leaderboard),
 }));
 
 // ── SECTIONS ──
@@ -117,21 +116,5 @@ export const resultsRelations = relations(results, ({ one }) => ({
     fields: [results.attemptId],
     references: [attempts.id],
   }),
-  leaderboard: one(leaderboard, {
-    fields: [results.id],
-    references: [leaderboard.resultId],
-  }),
 }));
 
-// ── LEADERBOARD ──
-// A leaderboard entry belongs to ONE test, belongs to ONE result
-export const leaderboardRelations = relations(leaderboard, ({ one }) => ({
-  set: one(sets, {
-    fields: [leaderboard.setId],
-    references: [sets.id],
-  }),
-  result: one(results, {
-    fields: [leaderboard.resultId],
-    references: [results.id],
-  }),
-}));

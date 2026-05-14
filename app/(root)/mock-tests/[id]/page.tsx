@@ -2,7 +2,7 @@ import Container from "@/components/container";
 import TestDetails from "@/components/client-tests/test-details";
 import { notFound } from "next/navigation";
 import { db } from "@/src/db";
-import { purchases, tests, attempts, results } from "@/src/db/schema";
+import { purchases, tests, attempts, results, sets } from "@/src/db/schema";
 import { and, eq, isNull, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
@@ -24,6 +24,11 @@ export default async function TestDetailsPage({
       eq(tests.status, "published"),
       isNull(tests.deletedAt),
     ),
+    with: {
+      sets: {
+        where: eq(sets.status, "published"),
+      },
+    },
   });
 
   // If no test is found, show 404
@@ -75,6 +80,9 @@ export default async function TestDetailsPage({
     }
   }
 
+  const totalSets = test.sets.length;
+  const calculatedQuestions = test.sets.reduce((sum, set) => sum + set.totalQuestions, 0);
+
   return (
     <Container>
       <TestDetails 
@@ -83,6 +91,8 @@ export default async function TestDetailsPage({
         attemptStatus={attemptStatus}
         attemptId={attemptId}
         resultId={resultId}
+        totalSets={totalSets}
+        calculatedQuestions={calculatedQuestions}
       />
     </Container>
   );
