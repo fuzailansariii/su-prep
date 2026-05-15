@@ -14,15 +14,15 @@ const VALID_TYPES = ["mcq", "multi", "truefalse"] as const;
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
 const rowSchema = z.object({
-  question: z.string().min(1, "question is required"),
+  question: z.coerce.string().min(1, "question is required"),
   type: z.enum(VALID_TYPES, { error: "type must be mcq, multi, or truefalse" }),
   marks: z.coerce.number().int().min(1).default(1),
-  explanation: z.string().optional(),
-  option_a: z.string().min(1, "option_a is required"),
-  option_b: z.string().min(1, "option_b is required"),
-  option_c: z.string().optional(),
-  option_d: z.string().optional(),
-  correct_options: z.string().min(1, "correct_options is required"),
+  explanation: z.coerce.string().optional(),
+  option_a: z.coerce.string().min(1, "option_a is required"),
+  option_b: z.coerce.string().min(1, "option_b is required"),
+  option_c: z.coerce.string().optional(),
+  option_d: z.coerce.string().optional(),
+  correct_options: z.coerce.string().min(1, "correct_options is required"),
 });
 
 export async function POST(req: NextRequest, { params }: Context) {
