@@ -93,7 +93,7 @@ export default function AuthCard({
       </div>
 
       <div className="relative z-10 w-full max-w-lg my-3">
-        <div className="bg-white/70 dark:bg-neutral-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl py-8 px-16 transition-all duration-300 hover:shadow-primary/10">
+        <div className="bg-white/70 dark:bg-neutral-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl p-8 transition-all duration-300 hover:shadow-primary/10">
           {/* Logo/Brand */}
           <div className="flex flex-col items-center mb-3">
             <Image
