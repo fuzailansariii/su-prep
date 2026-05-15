@@ -26,10 +26,10 @@ export const attempts = pgTable(
     clerkUserId: text("clerk_user_id").notNull(),
     testId: text("test_id")
       .notNull()
-      .references(() => tests.id, { onDelete: "restrict" }),
+      .references(() => tests.id, { onDelete: "cascade" }),
     setId: text("set_id")
       .notNull()
-      .references(() => sets.id, { onDelete: "restrict" }),
+      .references(() => sets.id, { onDelete: "cascade" }),
     // in attempts schema
     currentQuestionIndex: integer("current_question_index")
       .default(0)
@@ -57,7 +57,7 @@ export const attemptAnswers = pgTable(
       .references(() => attempts.id, { onDelete: "cascade" }),
     questionId: text("question_id")
       .notNull()
-      .references(() => questions.id, { onDelete: "restrict" }),
+      .references(() => questions.id, { onDelete: "cascade" }),
     selectedOptionIds: text("selected_option_ids").array(),
     isCorrect: boolean("is_correct").default(false).notNull(),
     isMarkedForReview: boolean("is_marked_for_review").default(false).notNull(),
