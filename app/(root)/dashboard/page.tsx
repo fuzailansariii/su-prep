@@ -185,7 +185,7 @@ export default async function DashboardPage() {
                       <Button
                         asChild
                         size="sm"
-                        className="font-heading font-bold text-xs h-8 rounded-lg"
+                        className="font-heading font-bold text-xs h-8 px-4 rounded-lg"
                       >
                         <Link href={`/test/${attempt.testId}`}>
                           Resume
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
                         asChild
                         size="sm"
                         variant="outline"
-                        className="font-heading font-bold text-xs h-8 rounded-lg text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
+                        className="font-heading font-bold text-xs h-8 px-4 rounded-lg text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
                       >
                         <Link href={`/results/${resultMap.get(attempt.id)?.id || attempt.id}`}>
                           View Result
