@@ -17,10 +17,10 @@ export const results = pgTable(
     clerkUserId: text("clerk_user_id").notNull(),
     testId: text("test_id")
       .notNull()
-      .references(() => tests.id, { onDelete: "restrict" }),
+      .references(() => tests.id, { onDelete: "cascade" }),
     setId: text("set_id")
       .notNull()
-      .references(() => sets.id, { onDelete: "restrict" }),
+      .references(() => sets.id, { onDelete: "cascade" }),
     marksLost: real("marks_lost").notNull().default(0),
     attemptId: text("attempt_id")
       .unique()
