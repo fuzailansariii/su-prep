@@ -65,6 +65,7 @@ export function AttemptMobileSidebar({
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -175,17 +176,18 @@ export function AttemptMobileSidebar({
               </Button>
             </div>
           </motion.div>
-
-          <ConfirmDialog
-            open={isPauseConfirmOpen}
-            title="Pause Test?"
-            message="Your progress will be saved. You can resume this test later from the dashboard."
-            onConfirm={handlePauseConfirm}
-            onCancel={() => setIsPauseConfirmOpen(false)}
-            isLoading={isPausing}
-          />
         </>
       )}
     </AnimatePresence>
+    
+    <ConfirmDialog
+      open={isPauseConfirmOpen}
+      title="Pause Test?"
+      message="Your progress will be saved. You can resume this test later from the dashboard."
+      onConfirm={handlePauseConfirm}
+      onCancel={() => setIsPauseConfirmOpen(false)}
+      isLoading={isPausing}
+    />
+    </>
   );
 }
