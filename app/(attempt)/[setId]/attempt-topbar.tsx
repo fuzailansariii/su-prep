@@ -12,7 +12,13 @@ import CountdownTimer from "@/components/attempt/timer";
 import logo from "@/public/su-cropped.png";
 import Image from "next/image";
 
-export default function TopBar({ onMenuClick, isLoading }: { onMenuClick?: () => void; isLoading?: boolean }) {
+export default function TopBar({
+  onMenuClick,
+  isLoading,
+}: {
+  onMenuClick?: () => void;
+  isLoading?: boolean;
+}) {
   const router = useRouter();
 
   const testTitle = useExamStore((s) => s.testTitle);
@@ -66,13 +72,14 @@ export default function TopBar({ onMenuClick, isLoading }: { onMenuClick?: () =>
   };
 
   const handlePauseConfirm = async () => {
-    setIsPauseConfirmOpen(false);
     try {
       await pauseExam(() => {
+        setIsPauseConfirmOpen(false);
         toast.success("Exam paused successfully.");
         router.replace(`/test/${testId}`);
       });
     } catch (err) {
+      setIsPauseConfirmOpen(false);
       toast.error("Failed to pause exam. Please try again.");
     }
   };
@@ -94,7 +101,7 @@ export default function TopBar({ onMenuClick, isLoading }: { onMenuClick?: () =>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <CountdownTimer
             seconds={timeRemaining}
             onExpire={() => {
@@ -110,16 +117,20 @@ export default function TopBar({ onMenuClick, isLoading }: { onMenuClick?: () =>
             variant="outline"
             className="h-10 px-3 rounded-xl font-heading font-bold text-xs border-amber-200 text-amber-700 hover:bg-amber-50 hidden md:flex items-center gap-2"
             onClick={() => setIsPauseConfirmOpen(true)}
-            disabled={isSubmitting || isPausing || isLoading || status !== "in_progress"}
+            disabled={
+              isSubmitting || isPausing || isLoading || status !== "in_progress"
+            }
           >
             <Pause size={14} /> Pause
           </Button>
 
           <Button
             size="lg"
-            className="h-10 px-5 rounded-xl font-heading font-bold text-sm bg-brand-primary hover:bg-brand-primary/90 text-white shadow-lg shadow-brand-primary/25 hidden md:flex"
+            className="h-10 px-5 rounded-xl font-heading font-bold text-sm bg-brand-primary hover:bg-brand-primary/90 text-white shadow-lg shadow-brand-primary/25 flex"
             onClick={() => setShowSubmitDialog(true)}
-            disabled={isSubmitting || isPausing || isLoading || status !== "in_progress"}
+            disabled={
+              isSubmitting || isPausing || isLoading || status !== "in_progress"
+            }
           >
             Submit Test
           </Button>

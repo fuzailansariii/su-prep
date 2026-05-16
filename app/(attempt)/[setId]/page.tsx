@@ -1,4 +1,3 @@
-// app/attempt/[setId]/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +8,7 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Bookmark,
   LayoutGrid,
   CheckCircle2,
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useExamStore } from "@/store/exam-store";
 import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
+import SectionDropdown from "@/components/attempt/section-dropdown";
 
 export default function AttemptPage() {
   const { setId } = useParams<{ setId: string }>();
@@ -37,7 +38,7 @@ export default function AttemptPage() {
   useEffect(() => {
     if (fetchedSetId.current === setId) return;
     fetchedSetId.current = setId;
-    
+
     setLoading(true);
     setError(null);
 
@@ -180,74 +181,77 @@ function ExamShell() {
 
   return (
     <div className="flex flex-col flex-1 bg-white select-none overflow-hidden">
-      {/* ─── Sub-Header: Navigation & Pagination ─── */}
-      <div className="bg-brand-label border-b border-slate-100 px-4 md:px-6 py-2.5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-            <LayoutGrid size={14} className="text-slate-500" />
+      {/* ─── Sub-Header: Sections & Navigation ─── */}
+      <div className="bg-brand-label border-b border-slate-100">
+        {/* Question nav + prev/next */}
+        <div className="px-4 md:px-6 py-2.5 flex items-center justify-between gap-4">
+          {/* Left: Section Dropdown (all screen sizes) */}
+          <SectionDropdown
+            sections={sections}
+            questions={questions}
+            currentQuestion={currentQuestion}
+            isSubmitting={isSubmitting}
+            goToQuestion={goToQuestion}
+          />
+
+          {/* Desktop Pagination — question number pills */}
+          <div className="hidden md:flex items-center gap-1.5 flex-1 max-w-md lg:max-w-2xl overflow-x-auto px-4 no-scrollbar scroll-smooth mx-auto">
+            {questions.map((q, idx) => {
+              const status = questionStatus[q.id];
+              const isCurrent = idx === currentIndex;
+
+              return (
+                <button
+                  key={q.id}
+                  id={`q-nav-${idx}`}
+                  onClick={() => goToQuestion(idx)}
+                  ref={(el) => {
+                    if (isCurrent && el) {
+                      el.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                        inline: "center",
+                      });
+                    }
+                  }}
+                  className={cn(
+                    "w-8 h-8 rounded-lg text-xs font-bold font-heading transition-all border flex items-center justify-center shrink-0",
+                    isCurrent
+                      ? "bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary/20 scale-110 z-10"
+                      : status === "answered" || status === "answered_review"
+                        ? "bg-green-50 border-green-200 text-green-600"
+                        : status === "marked_for_review"
+                          ? "bg-amber-50 border-amber-200 text-amber-600"
+                          : "bg-white border-slate-200 text-slate-500 hover:border-slate-300",
+                  )}
+                  disabled={isSubmitting}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
           </div>
-          <span className="text-sm font-heading font-bold text-slate-700 truncate max-w-[120px] md:max-w-none">
-            {currentSection?.name || "Questions"}
-          </span>
-        </div>
 
-        {/* Desktop Pagination */}
-        <div className="hidden md:flex items-center gap-1.5 flex-1 max-w-md lg:max-w-2xl overflow-x-auto px-4 no-scrollbar scroll-smooth mx-auto">
-          {questions.map((q, idx) => {
-            const status = questionStatus[q.id];
-            const isCurrent = idx === currentIndex;
-
-            return (
-              <button
-                key={q.id}
-                id={`q-nav-${idx}`}
-                onClick={() => goToQuestion(idx)}
-                ref={(el) => {
-                  if (isCurrent && el) {
-                    el.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                      inline: "center",
-                    });
-                  }
-                }}
-                className={cn(
-                  "w-8 h-8 rounded-lg text-xs font-bold font-heading transition-all border flex items-center justify-center shrink-0",
-                  isCurrent
-                    ? "bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary/20 scale-110 z-10"
-                    : status === "answered" || status === "answered_review"
-                      ? "bg-green-50 border-green-200 text-green-600"
-                      : status === "marked_for_review"
-                        ? "bg-amber-50 border-amber-200 text-amber-600"
-                        : "bg-white border-slate-200 text-slate-500 hover:border-slate-300",
-                )}
-                disabled={isSubmitting}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Nav Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToPrev}
-            disabled={currentIndex === 0 || isSubmitting}
-            className="h-9 px-3 rounded-xl border-slate-200 font-heading font-bold text-slate-600 hover:bg-white hover:text-brand-primary"
-          >
-            <ChevronLeft size={16} className="mr-1" /> Previous
-          </Button>
-          <Button
-            size="sm"
-            onClick={goToNext}
-            disabled={currentIndex === questions.length - 1 || isSubmitting}
-            className="h-9 px-4 rounded-xl bg-indigo-900 hover:bg-indigo-950 text-white font-heading font-bold"
-          >
-            Next <ChevronRight size={16} className="ml-1" />
-          </Button>
+          {/* Nav Buttons */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPrev}
+              disabled={currentIndex === 0 || isSubmitting}
+              className="h-9 px-3 rounded-xl border-slate-200 font-heading font-bold text-slate-600 hover:bg-white hover:text-brand-primary"
+            >
+              <ChevronLeft size={16} className="mr-1" /> Previous
+            </Button>
+            <Button
+              size="sm"
+              onClick={goToNext}
+              disabled={currentIndex === questions.length - 1 || isSubmitting}
+              className="h-9 px-4 rounded-xl bg-indigo-900 hover:bg-indigo-950 text-white font-heading font-bold"
+            >
+              Next <ChevronRight size={16} className="ml-1" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -339,23 +343,6 @@ function ExamShell() {
       {/* ─── Bottom Bar ─── */}
       <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-transparent pointer-events-none z-50">
         <div className="max-w-7xl mx-auto flex items-end justify-end gap-4 pointer-events-auto">
-          {/* Status Pill */}
-          {/* <div className="hidden sm:flex items-center gap-4 bg-slate-900/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 shadow-2xl">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/90">
-                Network Stable
-              </span>
-            </div>
-            <div className="w-px h-3 bg-white/20" />
-            <div className="flex items-center gap-2">
-              <Cloud size={14} className="text-white/60" />
-              <span className="text-[10px] font-bold text-white/60">
-                Autosave: 12s ago
-              </span>
-            </div>
-          </div> */}
-
           {/* Action Buttons */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <Button

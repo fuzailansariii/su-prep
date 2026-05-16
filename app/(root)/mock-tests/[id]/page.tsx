@@ -38,7 +38,8 @@ export default async function TestDetailsPage({
 
   // Check if already purchased and get attempt status
   let hasPurchased = false;
-  let attemptStatus: "not_started" | "in_progress" | "completed" = "not_started";
+  let attemptStatus: "not_started" | "in_progress" | "completed" =
+    "not_started";
   let attemptId: string | undefined;
   let resultId: string | undefined;
 
@@ -49,18 +50,15 @@ export default async function TestDetailsPage({
       where: and(
         eq(purchases.clerkUserId, userId),
         eq(purchases.testId, id),
-        eq(purchases.status, "completed")
+        eq(purchases.status, "completed"),
       ),
     });
-    
+
     if (purchase) {
       hasPurchased = true;
-      
+
       const attempt = await db.query.attempts.findFirst({
-        where: and(
-          eq(attempts.clerkUserId, userId),
-          eq(attempts.testId, id)
-        ),
+        where: and(eq(attempts.clerkUserId, userId), eq(attempts.testId, id)),
         orderBy: [desc(attempts.startedAt)],
       });
 
@@ -81,13 +79,16 @@ export default async function TestDetailsPage({
   }
 
   const totalSets = test.sets.length;
-  const calculatedQuestions = test.sets.reduce((sum, set) => sum + set.totalQuestions, 0);
+  const calculatedQuestions = test.sets.reduce(
+    (sum, set) => sum + set.totalQuestions,
+    0,
+  );
 
   return (
     <Container>
-      <TestDetails 
-        test={test} 
-        hasPurchased={hasPurchased} 
+      <TestDetails
+        test={test}
+        hasPurchased={hasPurchased}
         attemptStatus={attemptStatus}
         attemptId={attemptId}
         resultId={resultId}
