@@ -1,7 +1,7 @@
 import { db } from "@/src/db";
 import { questions, sections, sets } from "@/src/db/schema";
 import { and, eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,9 @@ export default async function SectionQuestionsPage({
   const { id: testId, setId } = await params;
   const { section: sectionId } = await searchParams;
 
-  if (!sectionId) notFound();
+  if (!sectionId) {
+    redirect(`/admin/tests/${testId}/sets/${setId}`);
+  }
 
   const [set, section, allQuestions] = await Promise.all([
     db.query.sets.findFirst({

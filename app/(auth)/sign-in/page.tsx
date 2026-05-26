@@ -22,7 +22,10 @@ export default function SignInPage() {
   // if already signed in redirect to dashboard/admin
   useEffect(() => {
     if (isSignedIn) {
-      if (isAdmin) {
+      const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else if (isAdmin) {
         router.push("/admin");
       } else {
         router.push("/dashboard");
@@ -33,25 +36,39 @@ export default function SignInPage() {
   if (isSignedIn) return null;
 
   // handle email submit — sends OTP code
-  const handleEmailSubmit = async (emailAddress: string) => {
+  const handleEmailSubmit = async (emailAddress: string): Promise<boolean> => {
     try {
       // Initialize a sign-in attempt with the email address
-      await signIn.create({ identifier: emailAddress });
+      const result = await signIn.create({ identifier: emailAddress });
+      if (result.error) {
+        throw result.error;
+      }
 
       // Send an OTP to the email
-      await signIn.emailCode.sendCode({ emailAddress });
+      const sendCodeResult = await signIn.emailCode.sendCode({ emailAddress });
+      if (sendCodeResult.error) {
+        throw sendCodeResult.error;
+      }
 
       setEmail(emailAddress);
       toast.success("Verification code sent to your email!");
       setCurrentStep("verification");
+      return true;
     } catch (error) {
       let errorMessage = "An unexpected error occurred";
 
       if (isClerkAPIResponseError(error)) {
         const clerkError = error.errors[0];
         if (clerkError?.code === "form_identifier_not_found") {
-          errorMessage =
-            "Unable to sign in. Please check your email or sign up.";
+          toast.error("Account not found. Redirecting you to sign up...");
+          const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+          const signUpUrl = `/sign-up?email=${encodeURIComponent(emailAddress)}${
+            redirectUrl ? `&redirect_url=${encodeURIComponent(redirectUrl)}` : ""
+          }`;
+          setTimeout(() => {
+            router.push(signUpUrl);
+          }, 1500);
+          return false;
         } else if (clerkError?.code === "form_password_incorrect") {
           errorMessage = "Incorrect password. Please try again.";
         } else {
@@ -64,18 +81,24 @@ export default function SignInPage() {
         errorMessage = error.message;
       }
       toast.error(errorMessage);
+      return false;
     }
   };
 
   // handle verify otp
   const handleVerify = async (code: string) => {
     try {
-      await signIn.emailCode.verifyCode({ code });
+      const verifyResult = await signIn.emailCode.verifyCode({ code });
+      if (verifyResult.error) {
+        throw verifyResult.error;
+      }
       if (signIn.status === "complete") {
         await signIn.finalize({
           navigate: ({ session, decorateUrl }) => {
             if (session?.currentTask) return;
-            const url = decorateUrl(isAdmin ? "/admin" : "/dashboard");
+            const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+            const target = redirectUrl || (isAdmin ? "/admin" : "/dashboard");
+            const url = decorateUrl(target);
             if (url.startsWith("http")) {
               window.location.href = url;
             } else {
@@ -108,7 +131,10 @@ export default function SignInPage() {
   // handle resend code
   const handleResend = async () => {
     try {
-      await signIn.emailCode.sendCode();
+      const resendResult = await signIn.emailCode.sendCode();
+      if (resendResult.error) {
+        throw resendResult.error;
+      }
       toast.success("Verification code resent to your email!");
     } catch (error) {
       if (isClerkAPIResponseError(error)) {

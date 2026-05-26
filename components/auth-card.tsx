@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FieldErrors, useForm, UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -21,7 +21,7 @@ interface AuthCardProps {
     email: string,
     firstName?: string,
     lastName?: string,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   onGoogleAuth?: () => Promise<void>;
 }
 
@@ -32,6 +32,8 @@ export default function AuthCard({
 }: AuthCardProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [emailParam, setEmailParam] = useState<string | null>(null);
 
   const isSignUp = mode === "sign-up";
   const schema = isSignUp ? signUpSchema : signInSchema;
@@ -49,6 +51,23 @@ export default function AuthCard({
     resolver: zodResolver(schema),
   });
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setRedirectUrl(params.get("redirect_url"));
+      setEmailParam(params.get("email"));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (emailParam) {
+      reset(isSignUp 
+        ? { email: emailParam, firstName: "", lastName: "" }
+        : { email: emailParam }
+      );
+    }
+  }, [emailParam, isSignUp, reset]);
+
   const signUpRegister = register as unknown as UseFormRegister<SignUpFormData>;
   const signUpError = errors as FieldErrors<SignUpFormData>;
 
@@ -57,12 +76,14 @@ export default function AuthCard({
     try {
       setIsLoading(true);
       const signUpData = data as SignUpFormData;
-      await onEmailSubmit(
+      const success = await onEmailSubmit(
         data.email,
         signUpData.firstName,
         signUpData.lastName,
       );
-      reset();
+      if (success) {
+        reset();
+      }
     } catch (error) {
       setIsLoading(false);
       console.error(error);
@@ -230,7 +251,10 @@ export default function AuthCard({
           <p className="text-center text-sm font-sans text-neutral-600 dark:text-neutral-400 mt-6">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <Link
-              href={isSignUp ? "/sign-in" : "/sign-up"}
+              href={isSignUp 
+                ? `/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}` 
+                : `/sign-up${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`
+              }
               className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors cursor-pointer"
             >
               {isSignUp ? "Sign in" : "Sign up"}
