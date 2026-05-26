@@ -148,7 +148,7 @@ export default async function SetsPage({
                   className="flex-1 font-heading font-bold bg-brand-primary"
                 >
                   <Link
-                    href={`/admin/tests/${testId}/sets/${set.id}/questions`}
+                    href={`/admin/tests/${testId}/sets/${set.id}`}
                   >
                     Questions
                   </Link>
