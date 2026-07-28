@@ -25,7 +25,10 @@ export default clerkMiddleware(async (auth, req) => {
   const isApi = req.nextUrl.pathname.startsWith("/api");
 
   const signInUrl = new URL("/sign-in", req.url);
-  signInUrl.searchParams.set("redirect_url", req.url);
+  signInUrl.searchParams.set(
+    "redirect_url",
+    req.nextUrl.pathname + req.nextUrl.search,
+  );
 
   // Admin routes
   if (isAdminRoute(req) || isAdminApiRoute(req)) {

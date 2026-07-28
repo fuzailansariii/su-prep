@@ -32,22 +32,7 @@ export async function POST(req: NextRequest) {
       .update(body)
       .digest("hex");
 
-    const isValid = expectedSignature === razorpay_signature;
-
-    if (!isValid) {
-      // mark as failed
-      await db
-        .update(purchases)
-        .set({ status: "failed", updatedAt: new Date() })
-        .where(eq(purchases.razorpayOrderId, razorpay_order_id));
-
-      return NextResponse.json(
-        { error: "Invalid payment signature" },
-        { status: 400 },
-      );
-    }
-
-    // Find the purchase row
+    // Find the purchase row FIRST — and require it belongs to this user
     const purchase = await db.query.purchases.findFirst({
       where: (p, { and, eq }) =>
         and(
@@ -60,6 +45,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Purchase not found" },
         { status: 404 },
+      );
+    }
+
+    // Now verify signature
+    const isValidSignature = crypto.timingSafeEqual(
+      Buffer.from(expectedSignature, "hex"),
+      Buffer.from(razorpay_signature, "hex"),
+    );
+
+    if (!isValidSignature) {
+      // Safe to update — we've already confirmed this purchase belongs to userId
+      if (purchase.status !== "completed") {
+        await db
+          .update(purchases)
+          .set({ status: "failed", updatedAt: new Date() })
+          .where(eq(purchases.id, purchase.id));
+      }
+
+      return NextResponse.json(
+        { error: "Invalid payment signature" },
+        { status: 400 },
       );
     }
 

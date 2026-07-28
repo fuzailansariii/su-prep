@@ -42,6 +42,27 @@ async function getValidTest(testId: string) {
   return { test };
 }
 
+// async function upsertPurchase(
+//   existing: typeof purchases.$inferSelect | undefined,
+//   orderId: string,
+//   data: typeof purchases.$inferInsert,
+// ) {
+//   if (existing?.status === "failed") {
+//     await db
+//       .update(purchases)
+//       .set({
+//         razorpayOrderId: orderId,
+//         status: "pending",
+//         updatedAt: new Date(),
+//       })
+//       .where(eq(purchases.id, existing.id));
+//   } else {
+//     await db.insert(purchases).values(data);
+//   }
+// }
+
+// ── route handler ───────────────────────────────────────
+
 async function upsertPurchase(
   existing: typeof purchases.$inferSelect | undefined,
   orderId: string,
@@ -56,12 +77,24 @@ async function upsertPurchase(
         updatedAt: new Date(),
       })
       .where(eq(purchases.id, existing.id));
-  } else {
+    return;
+  }
+
+  try {
     await db.insert(purchases).values(data);
+  } catch (e: any) {
+    // Postgres unique_violation — another concurrent request already inserted this row
+    if (e.code === "23505") {
+      const winner = await db.query.purchases.findFirst({
+        where: (p, { and, eq }) =>
+          and(eq(p.clerkUserId, data.clerkUserId), eq(p.testId, data.testId)),
+      });
+      if (!winner) throw e; // truly unexpected, don't swallow
+      return; // the other request's insert wins, this one just defers
+    }
+    throw e;
   }
 }
-
-// ── route handler ───────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
