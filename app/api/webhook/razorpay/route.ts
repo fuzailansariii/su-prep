@@ -5,12 +5,12 @@ import { eq } from "drizzle-orm";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
-  const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
-
-  if (!WEBHOOK_SECRET) {
-    throw new Error("Missing webhook secret");
-  }
   try {
+    const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!WEBHOOK_SECRET) {
+      throw new Error("Missing webhook secret");
+    }
     // Get raw body — must be raw for signature verification
     const rawBody = await req.text();
     const signature = req.headers.get("x-razorpay-signature");
@@ -25,7 +25,12 @@ export async function POST(req: NextRequest) {
       .update(rawBody)
       .digest("hex");
 
-    const isValid = expectedSignature === signature;
+    const expectedBuf = Buffer.from(expectedSignature, "hex");
+    const receivedBuf = Buffer.from(signature, "hex");
+
+    const isValid =
+      expectedBuf.length === receivedBuf.length &&
+      crypto.timingSafeEqual(expectedBuf, receivedBuf);
 
     if (!isValid) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -76,13 +81,16 @@ export async function POST(req: NextRequest) {
         const payment = event.payload.payment.entity;
         const orderId = payment.order_id;
 
-        await db
-          .update(purchases)
-          .set({
-            status: "failed",
-            updatedAt: new Date(),
-          })
-          .where(eq(purchases.razorpayOrderId, orderId));
+        const purchase = await db.query.purchases.findFirst({
+          where: eq(purchases.razorpayOrderId, orderId),
+        });
+
+        if (purchase && purchase.status !== "completed") {
+          await db
+            .update(purchases)
+            .set({ status: "failed", updatedAt: new Date() })
+            .where(eq(purchases.id, purchase.id));
+        }
 
         console.log("[webhook] Payment failed for order:", orderId);
         break;
@@ -122,7 +130,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("[webhook]", error);
-    // still return 200 — don't trigger Razorpay retries for server errors
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }

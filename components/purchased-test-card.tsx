@@ -145,15 +145,17 @@ export default function PurchasedTestCard({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-slate-100 w-full">
           <Button
             asChild
             variant="outline"
-            className="flex-1 py-2 font-heading text-sm text-brand-primary font-bold rounded-xl"
+            className="w-full sm:w-1/2 h-11 font-heading text-xs sm:text-sm text-slate-700 hover:text-brand-primary font-bold rounded-xl border-slate-200"
           >
             <Link href={`/mock-tests/${test.id}`}>View Details</Link>
           </Button>
-          {actionButton}
+          <div className="w-full sm:w-1/2 flex">
+            {actionButton}
+          </div>
         </div>
       </div>
     </div>

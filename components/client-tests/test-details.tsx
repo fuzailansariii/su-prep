@@ -69,7 +69,7 @@ export default function TestDetails({
       </div>
 
       {/* Right column — purchase card */}
-      <div className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 self-start">
+      <div className="w-full lg:w-96 shrink-0 lg:sticky lg:top-24 self-start">
         <div className="rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/60">
           {/* Image */}
           <div className="relative w-full h-52 bg-slate-100 overflow-hidden">

@@ -13,6 +13,23 @@ import {
 
 type Step = "email" | "verification";
 
+function getRedirectUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectUrl = urlParams.get("redirect_url");
+  if (!redirectUrl) return null;
+
+  if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
+    try {
+      const parsed = new URL(redirectUrl);
+      return parsed.pathname + parsed.search;
+    } catch {
+      return redirectUrl;
+    }
+  }
+  return redirectUrl;
+}
+
 export default function SignUpPage() {
   const [currentStep, setCurrentStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -22,10 +39,10 @@ export default function SignUpPage() {
   const router = useRouter();
   const isAdmin = useIsAdmin();
 
-  // if already signed in redirect to dashboard/admin
+  // if already signed in redirect to redirectUrl/dashboard/admin
   useEffect(() => {
     if (isSignedIn) {
-      const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+      const redirectUrl = getRedirectUrl();
       if (redirectUrl) {
         router.push(redirectUrl);
       } else if (isAdmin) {
@@ -74,7 +91,7 @@ export default function SignUpPage() {
 
         if (clerkError?.code === "form_identifier_exists") {
           toast.error("This email is already registered. Redirecting you to sign in...");
-          const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+          const redirectUrl = getRedirectUrl();
           const signInUrl = `/sign-in?email=${encodeURIComponent(emailAddress)}${
             redirectUrl ? `&redirect_url=${encodeURIComponent(redirectUrl)}` : ""
           }`;
@@ -107,11 +124,20 @@ export default function SignUpPage() {
         throw verifyResult.error;
       }
       if (signUp.status === "complete") {
-        await signUp.finalize();
+        await signUp.finalize({
+          navigate: ({ session, decorateUrl }) => {
+            if (session?.currentTask) return;
+            const redirectUrl = getRedirectUrl();
+            const target = redirectUrl || (isAdmin ? "/admin" : "/dashboard");
+            const url = decorateUrl(target);
+            if (url.startsWith("http")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
         toast.success("Account created successfully!");
-        const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
-        const target = redirectUrl || (isAdmin ? "/admin" : "/dashboard");
-        router.push(target);
       } else {
         toast.error("Verification incomplete. Please try again.");
         throw new Error("Verification incomplete");
@@ -151,9 +177,10 @@ export default function SignUpPage() {
   // handle google sign up
   const handleGoogleSignUp = async () => {
     try {
+      const redirectUrl = getRedirectUrl();
       await signUp.sso({
         strategy: "oauth_google",
-        redirectUrl: "/dashboard",
+        redirectUrl: redirectUrl || "/dashboard",
         redirectCallbackUrl: "/sso-callback",
       });
     } catch (error) {

@@ -1,6 +1,6 @@
 import Container from "@/components/container";
 import { db } from "@/src/db";
-import { results } from "@/src/db/schema";
+import { attemptAnswers, results } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
 import { recalculateLeaderboard } from "@/src/lib/leaderboard";
 import { and, eq } from "drizzle-orm";
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import QuestionBreakdownAccordion from "@/components/results/question-breakdown-accordion";
 
 type ResultPageProps = {
   params: Promise<{ resultId: string }>;
@@ -40,6 +41,19 @@ export default async function ResultPage({ params }: ResultPageProps) {
   if (!result) {
     notFound();
   }
+
+  // Fetch detailed attempt answers with questions, options, and sections
+  const attemptAnswersData = await db.query.attemptAnswers.findMany({
+    where: eq(attemptAnswers.attemptId, result.attemptId),
+    with: {
+      question: {
+        with: {
+          options: true,
+          section: true,
+        },
+      },
+    },
+  });
 
   const rank = await recalculateLeaderboard(result.setId, userId);
 
@@ -214,6 +228,9 @@ export default async function ResultPage({ params }: ResultPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Detailed Solutions & Answer Key Accordion */}
+      <QuestionBreakdownAccordion answers={attemptAnswersData} />
     </Container>
   );
 }
