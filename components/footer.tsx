@@ -14,8 +14,8 @@ const quickLinks = [
 ];
 
 const supportLinks = [
-  { label: "Contact Us", href: "/contact" },
-  { label: "FAQs", href: "/faqs" },
+  { label: "Contact Us", href: "https://www.shippingupdates.in/contact" },
+  { label: "About Us", href: "https://www.shippingupdates.in/about" },
 ];
 
 const legalLinks = [
@@ -52,10 +52,10 @@ export default function Footer() {
   return (
     <footer className="relative bg-slate-950 text-slate-400 overflow-hidden">
       {/* Gradient accent line */}
-      <div className="h-[2px] w-full bg-linear-to-r from-transparent via-brand-primary to-transparent" />
+      <div className="h-0.5 w-full bg-linear-to-r from-transparent via-brand-primary to-transparent" />
 
       {/* Subtle background glow */}
-      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-150 h-75 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-5 md:px-8 pt-14 md:pt-16 pb-8">
         {/* Main grid */}
