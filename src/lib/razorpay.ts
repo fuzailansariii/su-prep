@@ -1,5 +1,5 @@
 import Razorpay from "razorpay";
-import { and, eq, gte, inArray, isNotNull } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, ne } from "drizzle-orm";
 import { db } from "@/src/db";
 import { purchases, type Purchase } from "@/src/db/schema/purchases";
 
@@ -87,4 +87,94 @@ export async function reconcileUserPurchases(
   });
 
   await Promise.all(rows.map(reconcilePurchase));
+}
+
+export type RepairItem = {
+  purchaseId: string | null;
+  userId: string | null;
+  testId: string | null;
+  testTitle: string | null;
+  status: string | null;
+  orderId: string;
+  paymentId: string | null;
+  amount: number;
+  action: "fix" | "no_purchase_row";
+};
+
+// Walk every paid Razorpay order and find purchases that are not marked
+// completed. With apply=false nothing is written (dry run).
+export async function repairPaidPurchases(apply: boolean) {
+  const paidOrders: { id: string; amount: number; notes: Record<string, unknown> }[] = [];
+  for (let skip = 0; ; skip += 100) {
+    const { items } = await razorpay.orders.all({ count: 100, skip });
+    for (const o of items) {
+      if (o.status === "paid") {
+        paidOrders.push({
+          id: o.id,
+          amount: Number(o.amount),
+          notes: (o.notes ?? {}) as Record<string, unknown>,
+        });
+      }
+    }
+    if (items.length < 100) break;
+  }
+
+  const items: RepairItem[] = [];
+  for (const order of paidOrders) {
+    const userId = (order.notes.userId as string | undefined) ?? null;
+    const testId = (order.notes.testId as string | undefined) ?? null;
+
+    // match by order id first, then by the notes set at order creation
+    const purchase =
+      (await db.query.purchases.findFirst({
+        where: eq(purchases.razorpayOrderId, order.id),
+      })) ??
+      (userId && testId
+        ? await db.query.purchases.findFirst({
+            where: and(
+              eq(purchases.clerkUserId, userId),
+              eq(purchases.testId, testId),
+              ne(purchases.status, "completed"),
+            ),
+          })
+        : undefined);
+
+    if (purchase?.status === "completed") continue;
+
+    // Orders from other sites on the same Razorpay account carry no
+    // userId/testId notes and have no row here — not ours, skip them
+    if (!purchase && (!userId || !testId)) continue;
+
+    if (!purchase) {
+      items.push({
+        purchaseId: null,
+        userId,
+        testId,
+        testTitle: null,
+        status: null,
+        orderId: order.id,
+        paymentId: null,
+        amount: order.amount,
+        action: "no_purchase_row",
+      });
+      continue;
+    }
+
+    const paymentId = await getCapturedPaymentId(order.id);
+    items.push({
+      purchaseId: purchase.id,
+      userId: purchase.clerkUserId,
+      testId: purchase.testId,
+      testTitle: purchase.testTitle,
+      status: purchase.status,
+      orderId: order.id,
+      paymentId,
+      amount: order.amount,
+      action: "fix",
+    });
+
+    if (apply) await markPurchaseCompleted(purchase.id, paymentId, order.id);
+  }
+
+  return { paidOrders: paidOrders.length, items };
 }
