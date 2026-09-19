@@ -7,7 +7,7 @@ export type Step = "details" | "questions" | "done";
 export function StepIndicator({ current }: { current: Step }) {
   const steps: { key: Step; label: string }[] = [
     { key: "details", label: "Test Details" },
-    { key: "questions", label: "Add Questions" },
+    { key: "questions", label: "Next Steps" },
     { key: "done", label: "Complete" },
   ];
 
