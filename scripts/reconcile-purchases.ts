@@ -11,7 +11,7 @@ const apply = process.argv.includes("--apply");
 async function main() {
   console.log(apply ? "APPLY mode — writing fixes" : "DRY RUN — no writes");
 
-  const { paidOrders, items } = await repairPaidPurchases(apply);
+  const { paidOrders, items, revenue } = await repairPaidPurchases(apply);
   console.log(`Found ${paidOrders} paid orders in Razorpay`);
 
   for (const i of items) {
@@ -20,13 +20,15 @@ async function main() {
     } else {
       console.log(
         `→ purchase ${i.purchaseId} user=${i.userId} test=${i.testId} ` +
-          `status=${i.status} order=${i.orderId} payment=${i.paymentId}`,
+          `status=${i.status} order=${i.orderId} payment=${i.paymentId} ` +
+          `paid=${i.amount} recorded=${i.recordedAmount} action=${i.action}`,
       );
     }
   }
 
-  const fixed = items.filter((i) => i.action === "fix").length;
+  const fixed = items.filter((i) => i.action !== "no_purchase_row").length;
   console.log(`${apply ? "Fixed" : "Would fix"} ${fixed} purchase(s)`);
+  console.log("Revenue:", revenue);
   process.exit(0);
 }
 
