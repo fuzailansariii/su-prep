@@ -49,10 +49,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Now verify signature
-    const isValidSignature = crypto.timingSafeEqual(
-      Buffer.from(expectedSignature, "hex"),
-      Buffer.from(razorpay_signature, "hex"),
-    );
+    const expectedBuf = Buffer.from(expectedSignature, "hex");
+    const receivedBuf = Buffer.from(String(razorpay_signature), "hex");
+    const isValidSignature =
+      expectedBuf.length === receivedBuf.length &&
+      crypto.timingSafeEqual(expectedBuf, receivedBuf);
 
     if (!isValidSignature) {
       // Safe to update — we've already confirmed this purchase belongs to userId

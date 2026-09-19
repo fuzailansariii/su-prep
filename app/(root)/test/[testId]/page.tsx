@@ -5,6 +5,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { db } from "@/src/db";
 import { attempts, purchases, sets, tests } from "@/src/db/schema";
 import { requireAuth } from "@/src/lib/auth-helper";
+import { reconcileUserPurchases } from "@/src/lib/razorpay";
 import { and, eq, isNull } from "drizzle-orm";
 import {
   ArrowLeft,
@@ -37,6 +38,9 @@ export default async function TestInstruction({
   if (!userId) {
     redirect(`/sign-in?redirect_url=/test/${testId}`);
   }
+
+  // repair purchases paid on Razorpay but never marked completed
+  await reconcileUserPurchases(userId, testId);
 
   // purchase check
   const purchase = await db.query.purchases.findFirst({

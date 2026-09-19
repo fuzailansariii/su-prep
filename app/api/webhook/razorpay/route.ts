@@ -1,8 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { purchases } from "@/src/db/schema/purchases";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import crypto from "crypto";
+import { markPurchaseCompleted, razorpay } from "@/src/lib/razorpay";
+
+// Find the purchase row for a Razorpay order. Falls back to the order's notes
+// (userId + testId, set when the order was created) in case the row's
+// razorpayOrderId was replaced by a newer order.
+async function findPurchaseForOrder(
+  orderId: string,
+  notes?: { userId?: string; testId?: string },
+) {
+  const byOrder = await db.query.purchases.findFirst({
+    where: eq(purchases.razorpayOrderId, orderId),
+  });
+  if (byOrder) return byOrder;
+
+  const orderNotes =
+    notes ?? ((await razorpay.orders.fetch(orderId)).notes as typeof notes);
+  if (!orderNotes?.userId || !orderNotes?.testId) return undefined;
+
+  return db.query.purchases.findFirst({
+    where: and(
+      eq(purchases.clerkUserId, orderNotes.userId),
+      eq(purchases.testId, orderNotes.testId),
+    ),
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,10 +72,7 @@ export async function POST(req: NextRequest) {
         const orderId = payment.order_id;
         const paymentId = payment.id;
 
-        // find purchase
-        const purchase = await db.query.purchases.findFirst({
-          where: eq(purchases.razorpayOrderId, orderId),
-        });
+        const purchase = await findPurchaseForOrder(orderId);
 
         if (!purchase) {
           // log but return 200 — don't let Razorpay retry endlessly
@@ -63,15 +85,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        // mark completed
-        await db
-          .update(purchases)
-          .set({
-            status: "completed",
-            razorpayPaymentId: paymentId,
-            updatedAt: new Date(),
-          })
-          .where(eq(purchases.id, purchase.id));
+        await markPurchaseCompleted(purchase.id, paymentId, orderId);
 
         console.log("[webhook] Payment captured:", paymentId);
         break;
@@ -101,20 +115,12 @@ export async function POST(req: NextRequest) {
         const order = event.payload.order.entity;
         const payment = event.payload.payment.entity;
 
-        const purchase = await db.query.purchases.findFirst({
-          where: eq(purchases.razorpayOrderId, order.id),
-        });
+        const purchase = await findPurchaseForOrder(order.id, order.notes);
 
-        if (purchase && purchase.status !== "completed") {
-          await db
-            .update(purchases)
-            .set({
-              status: "completed",
-              razorpayPaymentId: payment.id,
-              updatedAt: new Date(),
-            })
-            .where(eq(purchases.id, purchase.id));
-
+        if (!purchase) {
+          console.error("[webhook] Purchase not found for order:", order.id);
+        } else if (purchase.status !== "completed") {
+          await markPurchaseCompleted(purchase.id, payment.id, order.id);
           console.log("[webhook] Order paid:", order.id);
         }
         break;
