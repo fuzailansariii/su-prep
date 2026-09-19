@@ -136,6 +136,8 @@ export async function repairPaidPurchases(apply: boolean) {
   }
 
   const items: RepairItem[] = [];
+  // purchase rows backed by a real paid order
+  const backedIds = new Set<string>();
   for (const order of paidOrders) {
     const userId = order.notes.userId as string;
     const testId = order.notes.testId as string;
@@ -169,6 +171,7 @@ export async function repairPaidPurchases(apply: boolean) {
       continue;
     }
 
+    backedIds.add(purchase.id);
     const isCompleted = purchase.status === "completed";
     if (isCompleted && purchase.amount === order.amount) continue;
 
@@ -193,6 +196,24 @@ export async function repairPaidPurchases(apply: boolean) {
       await markPurchaseCompleted(purchase.id, paymentId, order.id, order.amount);
   }
 
+  // Completed purchases with no paid live order behind them (test-card
+  // purchases, manual grants, edited rows). Reported only, never changed.
+  const completedRows = await db.query.purchases.findMany({
+    where: eq(purchases.status, "completed"),
+  });
+  const unbacked = completedRows
+    .filter((p) => !backedIds.has(p.id))
+    .map((p) => ({
+      purchaseId: p.id,
+      userId: p.clerkUserId,
+      testId: p.testId,
+      testTitle: p.testTitle,
+      amount: p.amount,
+      orderId: p.razorpayOrderId,
+      paymentId: p.razorpayPaymentId,
+      createdAt: p.createdAt,
+    }));
+
   // Revenue: real money on Razorpay (this app only) vs admin dashboard
   const [dashboard] = await db
     .select({
@@ -212,10 +233,12 @@ export async function repairPaidPurchases(apply: boolean) {
     dashboardCompletedPurchases: Number(dashboard.count),
     // positive = Razorpay received more than the dashboard shows
     differenceRupees: toRupees(razorpayPaise - dashboardPaise),
+    // completed purchases not backed by a paid Razorpay order
+    unbackedRupees: toRupees(unbacked.reduce((sum, p) => sum + p.amount, 0)),
     note: apply
       ? "dashboard figures read after fixes were applied"
       : "dashboard figures are before fixes; run POST and check again",
   };
 
-  return { paidOrders: paidOrders.length, items, revenue };
+  return { paidOrders: paidOrders.length, items, unbacked, revenue };
 }

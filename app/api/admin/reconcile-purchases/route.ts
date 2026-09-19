@@ -19,7 +19,7 @@ async function handle(apply: boolean) {
       );
     }
 
-    const { paidOrders, items, revenue } = await repairPaidPurchases(apply);
+    const { paidOrders, items, unbacked, revenue } = await repairPaidPurchases(apply);
 
     return NextResponse.json({
       success: true,
@@ -28,8 +28,10 @@ async function handle(apply: boolean) {
       toFix: items.filter((i) => i.action === "fix").length,
       toFixAmount: items.filter((i) => i.action === "fix_amount").length,
       noPurchaseRow: items.filter((i) => i.action === "no_purchase_row").length,
+      unbackedCompleted: unbacked.length,
       revenue,
       items,
+      unbacked,
     });
   } catch (error) {
     console.error("[admin/reconcile-purchases]", error);
