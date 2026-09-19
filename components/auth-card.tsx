@@ -61,9 +61,10 @@ export default function AuthCard({
 
   useEffect(() => {
     if (emailParam) {
-      reset(isSignUp 
-        ? { email: emailParam, firstName: "", lastName: "" }
-        : { email: emailParam }
+      reset(
+        isSignUp
+          ? { email: emailParam, firstName: "", lastName: "" }
+          : { email: emailParam },
       );
     }
   }, [emailParam, isSignUp, reset]);
@@ -149,7 +150,8 @@ export default function AuthCard({
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                       <Input
                         type="text"
-                        placeholder="Fuzail"
+                        placeholder="e.g. Rahul"
+                        autoComplete="given-name"
                         {...signUpRegister("firstName")}
                         className="pl-10 text-sm font-heading font-medium bg-white/50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 h-11 rounded-xl focus-visible:ring-primary focus-visible:ring-1 transition-all"
                         disabled={isLoading || googleLoading}
@@ -168,7 +170,8 @@ export default function AuthCard({
                     <div className="relative">
                       <Input
                         type="text"
-                        placeholder="Ansari"
+                        placeholder="e.g. Sharma"
+                        autoComplete="family-name"
                         {...signUpRegister("lastName")}
                         className="pl-4 text-sm font-heading font-medium bg-white/50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 h-11 rounded-xl focus-visible:ring-primary focus-visible:ring-1 transition-all"
                         disabled={isLoading || googleLoading}
@@ -190,7 +193,8 @@ export default function AuthCard({
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <Input
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder="you@example.com"
+                    autoComplete="email"
                     {...register("email")}
                     className="pl-10 text-sm font-heading font-medium bg-white/50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 h-11 rounded-xl focus-visible:ring-primary focus-visible:ring-1 transition-all"
                     disabled={isLoading || googleLoading}
@@ -251,9 +255,10 @@ export default function AuthCard({
           <p className="text-center text-sm font-sans text-neutral-600 dark:text-neutral-400 mt-6">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <Link
-              href={isSignUp 
-                ? `/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}` 
-                : `/sign-up${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`
+              href={
+                isSignUp
+                  ? `/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`
+                  : `/sign-up${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`
               }
               className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors cursor-pointer"
             >

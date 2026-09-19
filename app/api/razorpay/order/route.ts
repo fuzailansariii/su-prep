@@ -4,17 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
-
-// Validate env early
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  throw new Error("Razorpay keys are missing in environment variables");
-}
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+import { razorpay, reconcilePurchase } from "@/src/lib/razorpay";
 
 // ── helpers ─────────────────────────────────────────────
 
@@ -125,13 +115,30 @@ export async function POST(req: NextRequest) {
       return err("Already purchased", 409);
     }
 
-    // Reuse pending order if valid
-    if (existing?.status === "pending" && existing.razorpayOrderId) {
+    // The previous order may already be paid (client never reached /verify,
+    // webhook missed) — never replace a paid order with a new one
+    if (existing && (await reconcilePurchase(existing))) {
+      return err("Already purchased", 409);
+    }
+
+    // Reuse the previous order if it can still be paid.
+    // "attempted" orders accept new payment attempts in Razorpay.
+    if (existing?.razorpayOrderId) {
       const existingOrder = await razorpay.orders.fetch(
         existing.razorpayOrderId,
       );
 
-      if (existingOrder.status === "created") {
+      if (
+        (existingOrder.status === "created" ||
+          existingOrder.status === "attempted") &&
+        Number(existingOrder.amount) === test.price
+      ) {
+        // touch updatedAt so page-load reconcile keeps checking this order
+        await db
+          .update(purchases)
+          .set({ status: "pending", updatedAt: new Date() })
+          .where(eq(purchases.id, existing.id));
+
         return NextResponse.json({
           orderId: existingOrder.id,
           amount: existingOrder.amount,
@@ -141,12 +148,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // mark failed, patch status so upsertPurchase takes the update branch
-      await db
-        .update(purchases)
-        .set({ status: "failed", updatedAt: new Date() })
-        .where(eq(purchases.id, existing.id));
-
+      // patch status so upsertPurchase takes the update branch
       existing.status = "failed";
     }
 

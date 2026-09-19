@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import {
   AlertCircle,
@@ -15,6 +16,9 @@ import { Button } from "@/components/ui/button";
 
 type ImportError = { row: number; message: string };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // keep in sync with the import route
+const ALLOWED_EXTENSIONS = [".xlsx", ".xls"];
+
 type Props = {
   sectionId: string;
   sectionName: string;
@@ -22,6 +26,7 @@ type Props = {
 };
 
 export function QuestionImport({ sectionId, sectionName, onSuccess }: Props) {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,6 +45,15 @@ export function QuestionImport({ sectionId, sectionName, onSuccess }: Props) {
 
   const handleFile = (f: File) => {
     reset();
+    const name = f.name.toLowerCase();
+    if (!ALLOWED_EXTENSIONS.some((ext) => name.endsWith(ext))) {
+      setApiError("Only Excel files (.xlsx, .xls) are accepted.");
+      return;
+    }
+    if (f.size > MAX_FILE_SIZE) {
+      setApiError("Excel file must be under 5MB.");
+      return;
+    }
     setFile(f);
   };
 
@@ -69,13 +83,15 @@ export function QuestionImport({ sectionId, sectionName, onSuccess }: Props) {
       setResult({ count: res.data.count });
       setFile(null);
       onSuccess?.(res.data.count);
+      // refresh server data so the new question count shows without a reload
+      router.refresh();
     } catch (err) {
       if (err instanceof AxiosError) {
         const data = err.response?.data;
         if (data?.errors?.length) {
           setErrors(data.errors);
         } else {
-          setApiError(data?.message ?? "Import failed.");
+          setApiError(data?.message ?? data?.error ?? "Import failed.");
         }
       } else {
         setApiError("Unexpected error.");
@@ -158,7 +174,6 @@ export function QuestionImport({ sectionId, sectionName, onSuccess }: Props) {
             <p className="text-sm font-heading font-bold text-green-700">
               {result.count} question{result.count !== 1 ? "s" : ""} imported!
             </p>
-            <p className="text-xs text-green-600 font-sans">Reload the page to see the updated question count.</p>
           </div>
           <button onClick={reset} className="text-green-500 hover:text-green-700">
             <X size={14} />

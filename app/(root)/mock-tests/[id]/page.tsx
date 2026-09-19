@@ -5,6 +5,7 @@ import { db } from "@/src/db";
 import { purchases, tests, attempts, results, sets } from "@/src/db/schema";
 import { and, eq, isNull, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import { reconcileUserPurchases } from "@/src/lib/razorpay";
 
 interface TestDetailsPageProps {
   params: Promise<{
@@ -46,6 +47,9 @@ export default async function TestDetailsPage({
   const { userId } = await auth();
 
   if (userId) {
+    // repair purchases paid on Razorpay but never marked completed
+    await reconcileUserPurchases(userId, id);
+
     const purchase = await db.query.purchases.findFirst({
       where: and(
         eq(purchases.clerkUserId, userId),

@@ -21,6 +21,7 @@ import { Image } from "@imagekit/next";
 import { tests } from "@/src/db/schema";
 import { isNull, notInArray } from "drizzle-orm";
 import { formatPrice } from "@/utils/format-price";
+import { reconcileUserPurchases } from "@/src/lib/razorpay";
 
 export default async function DashboardPage() {
   const { userId, sessionClaims } = await auth();
@@ -57,6 +58,9 @@ export default async function DashboardPage() {
             totalCompleted,
         )
       : 0;
+
+  // repair purchases paid on Razorpay but never marked completed
+  await reconcileUserPurchases(userId);
 
   // Fetch user's purchases with the associated test
   const userPurchases = await db.query.purchases.findMany({

@@ -4,6 +4,7 @@ import { db } from "@/src/db";
 import { tests, purchases } from "@/src/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import { reconcileUserPurchases } from "@/src/lib/razorpay";
 import CheckoutClient from "./checkout-client";
 
 interface CheckoutPageProps {
@@ -33,6 +34,9 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   if (!test) {
     notFound();
   }
+
+  // repair purchases paid on Razorpay but never marked completed
+  await reconcileUserPurchases(userId, testId);
 
   // Check if already purchased
   const existingPurchase = await db.query.purchases.findFirst({
