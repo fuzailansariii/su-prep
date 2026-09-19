@@ -1,5 +1,5 @@
 import Razorpay from "razorpay";
-import { and, eq, gte, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, ne, sql, count } from "drizzle-orm";
 import { db } from "@/src/db";
 import { purchases, type Purchase } from "@/src/db/schema/purchases";
 
@@ -12,11 +12,13 @@ export const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Mark a purchase completed (idempotent)
+// Mark a purchase completed (idempotent). Pass the amount Razorpay actually
+// received (paise) so revenue reflects real money, not the price at row creation.
 export async function markPurchaseCompleted(
   purchaseId: string,
   paymentId: string | null,
   orderId?: string,
+  amountPaid?: number,
 ) {
   await db
     .update(purchases)
@@ -24,6 +26,7 @@ export async function markPurchaseCompleted(
       status: "completed",
       ...(paymentId ? { razorpayPaymentId: paymentId } : {}),
       ...(orderId ? { razorpayOrderId: orderId } : {}),
+      ...(amountPaid ? { amount: amountPaid } : {}),
       updatedAt: new Date(),
     })
     .where(eq(purchases.id, purchaseId));
@@ -52,12 +55,17 @@ export async function reconcilePurchase(purchase: Purchase): Promise<boolean> {
       if (order.status !== "attempted") return false;
       const paymentId = await getCapturedPaymentId(order.id);
       if (!paymentId) return false;
-      await markPurchaseCompleted(purchase.id, paymentId);
+      await markPurchaseCompleted(purchase.id, paymentId, undefined, Number(order.amount));
       return true;
     }
 
     const paymentId = await getCapturedPaymentId(order.id);
-    await markPurchaseCompleted(purchase.id, paymentId);
+    await markPurchaseCompleted(
+      purchase.id,
+      paymentId,
+      undefined,
+      Number(order.amount_paid) || Number(order.amount),
+    );
     console.log("[razorpay] reconciled purchase", purchase.id, order.id);
     return true;
   } catch (error) {
@@ -97,53 +105,53 @@ export type RepairItem = {
   status: string | null;
   orderId: string;
   paymentId: string | null;
-  amount: number;
-  action: "fix" | "no_purchase_row";
+  amount: number; // paise actually paid on Razorpay
+  recordedAmount: number | null; // paise stored on the purchase row
+  // fix: paid but not completed · fix_amount: completed with wrong amount
+  // no_purchase_row: paid but no matching row (e.g. duplicate payment)
+  action: "fix" | "fix_amount" | "no_purchase_row";
 };
 
-// Walk every paid Razorpay order and find purchases that are not marked
-// completed. With apply=false nothing is written (dry run).
+const toRupees = (paise: number) => paise / 100;
+
+// Walk every paid Razorpay order of this app and find purchases that are not
+// marked completed or have the wrong amount. Also compares real revenue with
+// what the admin dashboard shows. With apply=false nothing is written (dry run).
 export async function repairPaidPurchases(apply: boolean) {
   const paidOrders: { id: string; amount: number; notes: Record<string, unknown> }[] = [];
   for (let skip = 0; ; skip += 100) {
     const { items } = await razorpay.orders.all({ count: 100, skip });
     for (const o of items) {
-      if (o.status === "paid") {
-        paidOrders.push({
-          id: o.id,
-          amount: Number(o.amount),
-          notes: (o.notes ?? {}) as Record<string, unknown>,
-        });
-      }
+      const notes = (o.notes ?? {}) as Record<string, unknown>;
+      // Orders from other sites on the same Razorpay account carry no
+      // userId/testId notes — not ours, skip them
+      if (o.status !== "paid" || !notes.userId || !notes.testId) continue;
+      paidOrders.push({
+        id: o.id,
+        amount: Number(o.amount_paid) || Number(o.amount),
+        notes,
+      });
     }
     if (items.length < 100) break;
   }
 
   const items: RepairItem[] = [];
   for (const order of paidOrders) {
-    const userId = (order.notes.userId as string | undefined) ?? null;
-    const testId = (order.notes.testId as string | undefined) ?? null;
+    const userId = order.notes.userId as string;
+    const testId = order.notes.testId as string;
 
     // match by order id first, then by the notes set at order creation
     const purchase =
       (await db.query.purchases.findFirst({
         where: eq(purchases.razorpayOrderId, order.id),
       })) ??
-      (userId && testId
-        ? await db.query.purchases.findFirst({
-            where: and(
-              eq(purchases.clerkUserId, userId),
-              eq(purchases.testId, testId),
-              ne(purchases.status, "completed"),
-            ),
-          })
-        : undefined);
-
-    if (purchase?.status === "completed") continue;
-
-    // Orders from other sites on the same Razorpay account carry no
-    // userId/testId notes and have no row here — not ours, skip them
-    if (!purchase && (!userId || !testId)) continue;
+      (await db.query.purchases.findFirst({
+        where: and(
+          eq(purchases.clerkUserId, userId),
+          eq(purchases.testId, testId),
+          ne(purchases.status, "completed"),
+        ),
+      }));
 
     if (!purchase) {
       items.push({
@@ -155,12 +163,19 @@ export async function repairPaidPurchases(apply: boolean) {
         orderId: order.id,
         paymentId: null,
         amount: order.amount,
+        recordedAmount: null,
         action: "no_purchase_row",
       });
       continue;
     }
 
-    const paymentId = await getCapturedPaymentId(order.id);
+    const isCompleted = purchase.status === "completed";
+    if (isCompleted && purchase.amount === order.amount) continue;
+
+    const paymentId = isCompleted
+      ? purchase.razorpayPaymentId
+      : await getCapturedPaymentId(order.id);
+
     items.push({
       purchaseId: purchase.id,
       userId: purchase.clerkUserId,
@@ -170,11 +185,37 @@ export async function repairPaidPurchases(apply: boolean) {
       orderId: order.id,
       paymentId,
       amount: order.amount,
-      action: "fix",
+      recordedAmount: purchase.amount,
+      action: isCompleted ? "fix_amount" : "fix",
     });
 
-    if (apply) await markPurchaseCompleted(purchase.id, paymentId, order.id);
+    if (apply)
+      await markPurchaseCompleted(purchase.id, paymentId, order.id, order.amount);
   }
 
-  return { paidOrders: paidOrders.length, items };
+  // Revenue: real money on Razorpay (this app only) vs admin dashboard
+  const [dashboard] = await db
+    .select({
+      sum: sql<number>`coalesce(sum(${purchases.amount}), 0)`,
+      count: count(),
+    })
+    .from(purchases)
+    .where(eq(purchases.status, "completed"));
+
+  const razorpayPaise = paidOrders.reduce((sum, o) => sum + o.amount, 0);
+  const dashboardPaise = Number(dashboard.sum);
+
+  const revenue = {
+    razorpayRupees: toRupees(razorpayPaise),
+    razorpayPaidOrders: paidOrders.length,
+    dashboardRupees: toRupees(dashboardPaise),
+    dashboardCompletedPurchases: Number(dashboard.count),
+    // positive = Razorpay received more than the dashboard shows
+    differenceRupees: toRupees(razorpayPaise - dashboardPaise),
+    note: apply
+      ? "dashboard figures read after fixes were applied"
+      : "dashboard figures are before fixes; run POST and check again",
+  };
+
+  return { paidOrders: paidOrders.length, items, revenue };
 }

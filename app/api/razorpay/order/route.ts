@@ -64,6 +64,9 @@ async function upsertPurchase(
       .set({
         razorpayOrderId: orderId,
         status: "pending",
+        // keep the row in sync with the new order's price
+        amount: data.amount,
+        testTitle: data.testTitle,
         updatedAt: new Date(),
       })
       .where(eq(purchases.id, existing.id));

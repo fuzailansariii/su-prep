@@ -85,7 +85,12 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        await markPurchaseCompleted(purchase.id, paymentId, orderId);
+        await markPurchaseCompleted(
+          purchase.id,
+          paymentId,
+          orderId,
+          Number(payment.amount),
+        );
 
         console.log("[webhook] Payment captured:", paymentId);
         break;
@@ -120,7 +125,12 @@ export async function POST(req: NextRequest) {
         if (!purchase) {
           console.error("[webhook] Purchase not found for order:", order.id);
         } else if (purchase.status !== "completed") {
-          await markPurchaseCompleted(purchase.id, payment.id, order.id);
+          await markPurchaseCompleted(
+            purchase.id,
+            payment.id,
+            order.id,
+            Number(order.amount_paid) || Number(payment.amount),
+          );
           console.log("[webhook] Order paid:", order.id);
         }
         break;
